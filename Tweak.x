@@ -1942,6 +1942,24 @@ static NSNumber *BHTFeatureSwitchOverrideValueForKey(NSString *key) {
         return @NO;
     }
 
+    // Video pre-roll / mid-roll ad disables
+    if ([BHTManager HidePromoted]) {
+        if ([key isEqualToString:@"promoted_video_ad_enabled"] ||
+            [key isEqualToString:@"ios_promoted_video_enabled"] ||
+            [key isEqualToString:@"video_preroll_ad_enabled"] ||
+            [key isEqualToString:@"promoted_video_ready_to_send_enabled"] ||
+            [key isEqualToString:@"ios_video_ad_enabled"] ||
+            [key isEqualToString:@"video_ad_enabled"] ||
+            [key isEqualToString:@"preroll_ads_enabled"] ||
+            [key isEqualToString:@"midroll_ads_enabled"] ||
+            [key isEqualToString:@"amplify_preroll_enabled"] ||
+            [key isEqualToString:@"amplify_mid_roll_enabled"] ||
+            [key isEqualToString:@"video_dynamic_ad_enabled"] ||
+            [key isEqualToString:@"promoted_video_enabled"]) {
+            return @NO;
+        }
+    }
+
     return nil;
 }
 
@@ -2190,6 +2208,12 @@ static NSNumber *BHTFeatureSwitchOverrideValueForKey(NSString *key) {
 - (BOOL)allowPromotedContent {
     return [BHTManager HidePromoted] ? NO : %orig;
 }
+- (BOOL)allowPromotedVideoContent {
+    return [BHTManager HidePromoted] ? NO : %orig;
+}
+- (BOOL)isPromotedVideoEnabled {
+    return [BHTManager HidePromoted] ? NO : %orig;
+}
 %end
 
 %hook TFNTwitterAccount
@@ -2238,6 +2262,18 @@ static NSNumber *BHTFeatureSwitchOverrideValueForKey(NSString *key) {
     return [BHTManager disableSensitiveTweetWarnings] ? false : %orig;
 }
 - (_Bool)isVideoDynamicAdEnabled {
+    return [BHTManager HidePromoted] ? false : %orig;
+}
+- (_Bool)isPromotedVideoEnabled {
+    return [BHTManager HidePromoted] ? false : %orig;
+}
+- (_Bool)isPreRollAdEnabled {
+    return [BHTManager HidePromoted] ? false : %orig;
+}
+- (_Bool)isVideoPreRollAdEnabled {
+    return [BHTManager HidePromoted] ? false : %orig;
+}
+- (_Bool)isPromotedVideoAdEnabled {
     return [BHTManager HidePromoted] ? false : %orig;
 }
 
