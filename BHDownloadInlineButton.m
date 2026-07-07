@@ -123,6 +123,31 @@ static id BHStyleButton(NSUInteger actionType, NSUInteger options, id overrideSi
     return button;
 }
 
+static id BHViewModelFromInlineDelegate(id delegate, id fallback) {
+    SEL viewModelSelector = @selector(viewModel);
+    if (BHStyleRespondsToSelector(delegate, viewModelSelector)) {
+        id viewModel = ((id (*)(id, SEL))objc_msgSend)(delegate, viewModelSelector);
+        if (viewModel) return viewModel;
+    }
+
+    SEL statusViewModelSelector = @selector(statusViewModel);
+    if (BHStyleRespondsToSelector(delegate, statusViewModelSelector)) {
+        id viewModel = ((id (*)(id, SEL))objc_msgSend)(delegate, statusViewModelSelector);
+        if (viewModel) return viewModel;
+    }
+
+    return fallback;
+}
+
+static NSArray *BHMediaEntitiesFromViewModel(id viewModel) {
+    SEL selector = @selector(representedMediaEntities);
+    if (!BHStyleRespondsToSelector(viewModel, selector)) {
+        return nil;
+    }
+
+    return ((NSArray *(*)(id, SEL))objc_msgSend)(viewModel, selector);
+}
+
 static UIImageView *BHImageViewInView(UIView *view) {
     if ([view isKindOfClass:UIImageView.class]) {
         return (UIImageView *)view;
@@ -211,6 +236,7 @@ static NSString *BHMethodTypeEncodingForSelector(SEL selector) {
                animated:(BOOL)animated
         featureSwitches:(id)featureSwitches
 {
+    self.viewModel = status;
     _bh_callSuperIfPossible(self, _cmd, status, options, textOptions, animated, featureSwitches);
 
     if (BHStyleRespondsToSelector(self.styleButton, _cmd)) {
@@ -228,6 +254,7 @@ static NSString *BHMethodTypeEncodingForSelector(SEL selector) {
      displayTextOptions:(NSUInteger)textOptions
                animated:(BOOL)animated
 {
+    self.viewModel = status;
     _bh_callSuperIfPossible(self, _cmd, status, options, textOptions, animated, nil);
 
     if (BHStyleRespondsToSelector(self.styleButton, _cmd)) {
@@ -591,7 +618,8 @@ static NSString *BHMethodTypeEncodingForSelector(SEL selector) {
                 if ([variant.contentType isEqualToString:@"application/x-mpegURL"]) [actions addObject:makeM3U8Item([NSURL URLWithString:variant.url])];
             }
         } else {
-            NSArray *mediaEntities = self.delegate.viewModel.representedMediaEntities;
+            id viewModel = BHViewModelFromInlineDelegate(self.delegate, self.viewModel);
+            NSArray *mediaEntities = BHMediaEntitiesFromViewModel(viewModel);
             if (mediaEntities.count > 1) {
                 [mediaEntities enumerateObjectsUsingBlock:^(TFSTwitterEntityMedia *obj, NSUInteger idx, BOOL *stop) {
                     if (obj.mediaType == 2 || obj.mediaType == 3) {

@@ -47,3 +47,32 @@ Validation notes:
 
 - Local validation should include `git diff --check`.
 - Full Theos build validation requires a configured Theos/iOS toolchain and should run `./build.sh --sideloaded` or the relevant release mode in CI.
+
+### 2026-07-07 - Add Twitter 12.6 community inline action support
+
+Files changed:
+
+- `Tweak.x`
+- `BHDownloadInlineButton.m`
+- `TWHeaders.h`
+- `PROJECT_CONTEXT.md`
+
+What changed:
+
+- IDA MCP analysis of Twitter 12.6 showed the main `Twitter` binary does not contain the inline action classes.
+- `T1Twitter.framework/T1Twitter` contains `T1StatusCommunitiesConversationBarView` and builds community conversation-bar buttons through `-_t1_setupInlineActionButtonsForStatusViewModel:option:account:`.
+- Added a hook for that setup method. It preserves the original setup, then appends `BHDownloadInlineButton` only when downloads are enabled and the status view model is a video cell.
+- Added a minimal `T1StatusCommunitiesConversationBarView` interface with `inlineActionButtons` and `statusViewModel`.
+- Updated `BHDownloadInlineButton` so it stores the latest status view model from `statusDidUpdate...` and can read media from either `viewModel` or `statusViewModel` delegates.
+
+Behavior impact:
+
+- Existing timeline inline action class-list hooks are unchanged.
+- Twitter 12.6 community conversation bars can now receive the download button through the newer setup flow.
+- Non-video community conversation bars are not modified.
+
+Validation notes:
+
+- IDA MCP verified `+[T1StatusCommunitiesConversationBarView _t1_inlineButtonClasses]` originally returns reply and favorite button classes.
+- IDA MCP verified `-_t1_setupInlineActionButtonsForStatusViewModel:option:account:` creates buttons from that class list, assigns delegate/animator, stores `inlineActionButtons`, and the caller sends `statusDidUpdate...` immediately afterward.
+- Full Theos build validation still requires a configured Theos/iOS toolchain.

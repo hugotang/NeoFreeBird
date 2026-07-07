@@ -1684,6 +1684,50 @@ static NSArray *BHT_inlineActionViewClassesForViewModel(NSArray *classes, id vie
     return [newClasses copy];
 }
 
+static BOOL BHT_inlineActionButtonsContainClass(NSArray *buttons, Class targetClass) {
+    for (id button in buttons) {
+        if ([button isKindOfClass:targetClass]) {
+            return YES;
+        }
+    }
+
+    return NO;
+}
+
+static void BHT_appendCommunityDownloadButton(T1StatusCommunitiesConversationBarView *actionsView,
+                                              id viewModel,
+                                              NSUInteger options,
+                                              id account) {
+    if (![BHTManager DownloadingVideos] || ![BHTManager isVideoCell:viewModel]) {
+        return;
+    }
+
+    Class downloadButtonClass = %c(BHDownloadInlineButton);
+    NSMutableArray *buttons = [actionsView.inlineActionButtons mutableCopy] ?: [NSMutableArray array];
+    if (!downloadButtonClass || BHT_inlineActionButtonsContainClass(buttons, downloadButtonClass)) {
+        return;
+    }
+
+    Class styleButtonClass = [buttons.lastObject class] ?: %c(TTAStatusInlineFavoriteButton);
+    if (styleButtonClass) {
+        ((void (*)(Class, SEL, Class))objc_msgSend)(downloadButtonClass, @selector(setStyleButtonClass:), styleButtonClass);
+    }
+
+    id button = ((id (*)(id, SEL, NSUInteger, id, id))objc_msgSend)([downloadButtonClass alloc], @selector(initWithOptions:overrideSize:account:), options, nil, account);
+    if (!button) {
+        return;
+    }
+
+    id animator = [[%c(TTAStatusInlineActionButtonAnimator) alloc] init];
+    ((void (*)(id, SEL, id))objc_msgSend)(button, @selector(setButtonAnimator:), animator);
+    ((void (*)(id, SEL, id))objc_msgSend)(button, @selector(setDelegate:), actionsView);
+    ((void (*)(id, SEL, id))objc_msgSend)(button, @selector(setViewModel:), viewModel);
+
+    [actionsView addSubview:button];
+    [buttons addObject:button];
+    actionsView.inlineActionButtons = [buttons copy];
+}
+
 %hook T1StatusInlineActionsView
 + (NSArray *)_t1_inlineActionViewClassesForViewModel:(id)arg1 options:(NSUInteger)arg2 displayType:(NSUInteger)arg3 account:(id)arg4 {
     NSArray *classes = %orig;
@@ -1695,6 +1739,13 @@ static NSArray *BHT_inlineActionViewClassesForViewModel(NSArray *classes, id vie
 + (NSArray *)_t1_inlineActionViewClassesForViewModel:(id)arg1 options:(NSUInteger)arg2 displayType:(NSUInteger)arg3 account:(id)arg4 {
     NSArray *classes = %orig;
     return BHT_inlineActionViewClassesForViewModel(classes, arg1);
+}
+%end
+
+%hook T1StatusCommunitiesConversationBarView
+- (void)_t1_setupInlineActionButtonsForStatusViewModel:(id)arg1 option:(NSUInteger)arg2 account:(id)arg3 {
+    %orig;
+    BHT_appendCommunityDownloadButton(self, arg1, arg2, arg3);
 }
 %end
 

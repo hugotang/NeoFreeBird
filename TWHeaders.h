@@ -298,6 +298,11 @@ static NSString *_lastCopiedURL;
 @property(nonatomic) id delegate;
 @end
 
+@interface T1StatusCommunitiesConversationBarView : UIView <T1StatusInlineActionButtonDelegate>
+@property(nonatomic, copy) NSArray *inlineActionButtons;
+@property(nonatomic, strong) id statusViewModel;
+@end
+
 @interface T1SlideshowStatusView : UIView
 @property (nonatomic, strong, readwrite) TFSTwitterEntityMedia *media;
 @end
