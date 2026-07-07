@@ -674,8 +674,10 @@ typedef NS_ENUM(NSInteger, BHTTwitterThemeVariant) {
 static BHTTwitterThemeVariant BHTCurrentTwitterThemeVariant(T1ProfileHeaderView *headerView) {
     UIUserInterfaceStyle style = UIUserInterfaceStyleLight;
 
-    if (headerView && @available(iOS 13.0, *)) {
-        style = headerView.traitCollection.userInterfaceStyle;
+    if (headerView) {
+        if (@available(iOS 13.0, *)) {
+            style = headerView.traitCollection.userInterfaceStyle;
+        }
     }
 
     // System / Twitter light theme
@@ -1684,13 +1686,15 @@ static NSArray *BHT_inlineActionViewClassesForViewModel(NSArray *classes, id vie
 
 %hook T1StatusInlineActionsView
 + (NSArray *)_t1_inlineActionViewClassesForViewModel:(id)arg1 options:(NSUInteger)arg2 displayType:(NSUInteger)arg3 account:(id)arg4 {
-    return BHT_inlineActionViewClassesForViewModel(%orig, arg1);
+    NSArray *classes = %orig;
+    return BHT_inlineActionViewClassesForViewModel(classes, arg1);
 }
 %end
 
 %hook TTAStatusInlineActionsView
 + (NSArray *)_t1_inlineActionViewClassesForViewModel:(id)arg1 options:(NSUInteger)arg2 displayType:(NSUInteger)arg3 account:(id)arg4 {
-    return BHT_inlineActionViewClassesForViewModel(%orig, arg1);
+    NSArray *classes = %orig;
+    return BHT_inlineActionViewClassesForViewModel(classes, arg1);
 }
 %end
 
