@@ -256,6 +256,7 @@ static NSString *_lastCopiedURL;
 @end
 
 @interface T1StatusCell : UITableViewCell <TTACoreStatusViewEventHandler>
+- (void)handleLikeKeyCommand;
 @end
 
 @interface T1TweetDetailsFocalStatusViewTableViewCell : T1StatusCell
@@ -305,6 +306,7 @@ static NSString *_lastCopiedURL;
 
 @interface T1SlideshowStatusView : UIView
 @property (nonatomic, strong, readwrite) TFSTwitterEntityMedia *media;
+- (void)_favoriteAction:(id)arg1;
 @end
 
 @interface T1StandardStatusView : UIView
@@ -391,6 +393,22 @@ static NSString *_lastCopiedURL;
 @end
 
 @interface T1DirectMessageEntryMediaCell () <BHDownloadDelegate, UIContextMenuInteractionDelegate>
+@end
+
+@interface T1DirectMessageConversationStatusView : UIView
+@property (nonatomic, strong) JGProgressHUD *hud;
+- (void)setViewModel:(id)viewModel options:(NSUInteger)options account:(id)account;
+- (id)inlineMedia;
+- (UIView *)visibleMediaForwardView;
+- (void)BHTDownloadHandler;
+@end
+
+@interface T1DirectMessageConversationStatusView () <BHDownloadDelegate, UIContextMenuInteractionDelegate>
+@end
+
+@interface _TtC11TwitterHome32PremiumUpsellBarButtonItemPlugin : NSObject
+- (id)rightBarButtonItem;
+- (void)showPremiumSignUp;
 @end
 
 @protocol TFNTwitterStatusBanner <NSObject>

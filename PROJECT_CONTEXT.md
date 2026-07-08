@@ -104,3 +104,31 @@ Validation notes:
 
 - Static IPA scanning found `T1LongerVideoUploadEnabledConfig`, `TFNBarButtonItemButton`, `TTAStatusInlineFavoriteButton`, and `T1TwitterSwift.ImmersiveDoubleTapLikePluginView` in `T1Twitter.framework`.
 - IDA MCP confirmed `T1LongerVideoUploadEnabledConfig` owns Full HD/4K upload selectors and confirmed `ImmersiveDoubleTapLikePluginView` implements `handleDoubleTap:`.
+
+### 2026-07-08 - Fill remaining confirmed Twitter 12.6 hook gaps
+
+Files changed:
+
+- `Tweak.x`
+- `TWHeaders.h`
+- `PROJECT_CONTEXT.md`
+
+What changed:
+
+- Added `TwitterHome.PremiumUpsellBarButtonItemPlugin` hooks for `rightBarButtonItem` and `showPremiumSignUp`, mapped from the Twitter 12.6 `T1Twitter.framework` Swift class `_TtC11TwitterHome32PremiumUpsellBarButtonItemPlugin`.
+- Added 12.6 like-confirm coverage for `T1StatusCell handleLikeKeyCommand` and `T1SlideshowStatusView _favoriteAction:`. The old `T1TweetDetailsViewController _t1_toggleFavoriteOnCurrentStatus` selector was not present in 12.6 and was not remapped directly.
+- Refactored DM video download menu creation into shared helpers that resolve video variants from `inlineMediaViewModel -> playerSessionProducer -> sessionProducible`.
+- Added a conservative `T1DirectMessageConversationStatusView setViewModel:options:account:` hook. It adds a context menu only when the new 12.6 DM/status view can dynamically resolve downloadable video variants.
+- Updated the top-level font helper to use `objc_getClass("TAEStandardFontGroup")` plus `objc_msgSend`, avoiding direct Logos class lookup for a class missing from the scanned 12.6 binaries.
+
+Behavior impact:
+
+- Premium home bar-button upsells are hidden by the existing `hidePremiumOffer` setting on Twitter 12.6.
+- Like confirmation now covers the confirmed 12.6 keyboard/responder and slideshow favorite paths without hooking `T1MenuBarBuilder`, avoiding duplicate confirmation alerts.
+- Legacy `T1DirectMessageEntryMediaCell` download support remains for older app versions, while Twitter 12.6 gets a new guarded DM/status media path.
+
+Validation notes:
+
+- IDA MCP confirmed `PremiumUpsellBarButtonItemPlugin rightBarButtonItem`, `showPremiumSignUp`, `T1StatusCell handleLikeKeyCommand`, `T1SlideshowStatusView _favoriteAction:`, and `T1DirectMessageConversationStatusView setViewModel:options:account:` exist in `T1Twitter.framework`.
+- Binary string scanning confirmed the old `T1TweetDetailsViewController _t1_toggleFavoriteOnCurrentStatus` and `T1DirectMessageEntryMediaCell setEntryViewModel:` entries are not present in Twitter 12.6.
+- Full Theos build validation still requires a configured Theos/iOS toolchain.
