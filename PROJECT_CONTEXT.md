@@ -76,3 +76,31 @@ Validation notes:
 - IDA MCP verified `+[T1StatusCommunitiesConversationBarView _t1_inlineButtonClasses]` originally returns reply and favorite button classes.
 - IDA MCP verified `-_t1_setupInlineActionButtonsForStatusViewModel:option:account:` creates buttons from that class list, assigns delegate/animator, stores `inlineActionButtons`, and the caller sends `statusDidUpdate...` immediately afterward.
 - Full Theos build validation still requires a configured Theos/iOS toolchain.
+
+### 2026-07-08 - Add additional Twitter 12.6 compatibility mappings
+
+Files changed:
+
+- `Tweak.x`
+- `BHDownloadInlineButton.m`
+- `BHTManager.m`
+- `TWHeaders.h`
+- `PROJECT_CONTEXT.md`
+
+What changed:
+
+- Added safe `TAEStandardFontGroup` fallbacks for menu title fonts. Twitter 12.6 no longer exposes that class in the scanned app binaries, so dictionary literals must not receive a nil font value.
+- Added `T1LongerVideoUploadEnabledConfig` hooks for Full HD and 4K upload enablement/default selectors used by Twitter 12.6's media upload configuration path.
+- Added a `T1TwitterSwift.ImmersiveDoubleTapLikePluginView` hook for the Swift immersive double-tap like path.
+- Added a `TFNBarButtonItemButton` hook alongside the legacy `TFNBarButtonItemButtonV1` hook for navigation button tint handling.
+
+Behavior impact:
+
+- Existing legacy hooks remain in place for older supported Twitter versions.
+- Twitter 12.6 gets additional mappings for media upload quality, immersive double-tap like confirmation, and navigation button tinting.
+- DM video download is not fully remapped yet because Twitter 12.6 no longer exposes the old `T1DirectMessageEntryMediaCell setEntryViewModel:` path; that requires a separate runtime/IDA pass before adding a safe hook.
+
+Validation notes:
+
+- Static IPA scanning found `T1LongerVideoUploadEnabledConfig`, `TFNBarButtonItemButton`, `TTAStatusInlineFavoriteButton`, and `T1TwitterSwift.ImmersiveDoubleTapLikePluginView` in `T1Twitter.framework`.
+- IDA MCP confirmed `T1LongerVideoUploadEnabledConfig` owns Full HD/4K upload selectors and confirmed `ImmersiveDoubleTapLikePluginView` implements `handleDoubleTap:`.

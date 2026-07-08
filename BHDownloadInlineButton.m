@@ -53,6 +53,16 @@ static Class BHStyleButtonClass(void) {
     return kBHStyleButtonClass;
 }
 
+static UIFont *BHHeadline2BoldFont(void) {
+    id fontGroup = [objc_getClass("TAEStandardFontGroup") sharedFontGroup];
+    if ([fontGroup respondsToSelector:@selector(headline2BoldFont)]) {
+        UIFont *font = [fontGroup performSelector:@selector(headline2BoldFont)];
+        if (font) return font;
+    }
+
+    return [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+}
+
 static BOOL BHStyleRespondsToSelector(id target, SEL selector) {
     return target && [target respondsToSelector:selector];
 }
@@ -567,8 +577,8 @@ static NSString *BHMethodTypeEncodingForSelector(SEL selector) {
 - (void)DownloadHandler:(UIButton *)sender {
     @try {
         NSAttributedString *titleString = [[NSAttributedString alloc] initWithString:[[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_MENU_TITLE"]
-                                                                         attributes:@{ NSFontAttributeName : [[objc_getClass("TAEStandardFontGroup") sharedFontGroup] headline2BoldFont],
-                                                                                       NSForegroundColorAttributeName : UIColor.labelColor }];
+                                                                         attributes:@{ NSFontAttributeName : BHHeadline2BoldFont(),
+                                                                                        NSForegroundColorAttributeName : UIColor.labelColor }];
         TFNActiveTextItem *title = [[objc_getClass("TFNActiveTextItem") alloc] initWithTextModel:[[objc_getClass("TFNAttributedTextModel") alloc] initWithAttributedString:titleString] activeRanges:nil];
 
         NSMutableArray *actions      = [NSMutableArray arrayWithObject:title];

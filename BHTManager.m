@@ -10,6 +10,16 @@
 #import "BHTBundle/BHTBundle.h"
 #import "ModernSettingsViewController.h"
 
+static UIFont *BHTHeadline2BoldFont(void) {
+    id fontGroup = [objc_getClass("TAEStandardFontGroup") sharedFontGroup];
+    if ([fontGroup respondsToSelector:@selector(headline2BoldFont)]) {
+        UIFont *font = [fontGroup performSelector:@selector(headline2BoldFont)];
+        if (font) return font;
+    }
+
+    return [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+}
+
 @implementation BHTManager
 + (bool)isDMVideoCell:(T1InlineMediaView *)view {
     if (view.playerIconViewType == 4) {
@@ -110,7 +120,7 @@
 }
 + (TFNMenuSheetViewController *)newFFmpegDownloadSheet:(MediaInformation *)mediaInformation downloadingURL:(NSURL *)downloadingURL progressView:(JGProgressHUD *)hud {
     NSAttributedString *AttString = [[NSAttributedString alloc] initWithString:[[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_MENU_TITLE"] attributes:@{
-        NSFontAttributeName: [[objc_getClass("TAEStandardFontGroup") sharedFontGroup] headline2BoldFont],
+        NSFontAttributeName: BHTHeadline2BoldFont(),
         NSForegroundColorAttributeName: UIColor.labelColor
     }];
     TFNActiveTextItem *title = [[objc_getClass("TFNActiveTextItem") alloc] initWithTextModel:[[objc_getClass("TFNAttributedTextModel") alloc] initWithAttributedString:AttString] activeRanges:nil];

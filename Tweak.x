@@ -52,6 +52,16 @@ static char kBHTSourceTapAddedKey;
 static BOOL BHT_themeManagerInitialized = NO;
 static BOOL BHT_isInThemeChangeOperation = NO;
 
+static UIFont *BHTHeadline2BoldFont(void) {
+    id fontGroup = [[%c(TAEStandardFontGroup) class] respondsToSelector:@selector(sharedFontGroup)] ? [%c(TAEStandardFontGroup) sharedFontGroup] : nil;
+    if ([fontGroup respondsToSelector:@selector(headline2BoldFont)]) {
+        UIFont *font = [fontGroup performSelector:@selector(headline2BoldFont)];
+        if (font) return font;
+    }
+
+    return [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+}
+
 // Map to store timestamp labels for each player instance
 static NSMapTable<T1ImmersiveFullScreenViewController *, UILabel *> *playerToTimestampMap = nil;
 
@@ -1242,7 +1252,7 @@ static void BHTApplyCopyButtonStyle(UIButton *copyButton, T1ProfileHeaderView *h
 }
 %new - (void)DownloadHandler {
     NSAttributedString *AttString = [[NSAttributedString alloc] initWithString:[[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_MENU_TITLE"] attributes:@{
-        NSFontAttributeName: [[%c(TAEStandardFontGroup) sharedFontGroup] headline2BoldFont],
+        NSFontAttributeName: BHTHeadline2BoldFont(),
         NSForegroundColorAttributeName: UIColor.labelColor
     }];
     TFNActiveTextItem *title = [[%c(TFNActiveTextItem) alloc] initWithTextModel:[[%c(TFNAttributedTextModel) alloc] initWithAttributedString:AttString] activeRanges:nil];
@@ -2346,6 +2356,21 @@ static NSNumber *BHTFeatureSwitchOverrideValueForKey(NSString *key) {
 }
 %end
 
+%hook T1LongerVideoUploadEnabledConfig
+- (_Bool)isUploadFullHDVideoEnabled {
+    return [BHTManager autoHighestLoad] ? true : %orig;
+}
+- (_Bool)isUploadFullHDVideoEnabledByDefault {
+    return [BHTManager autoHighestLoad] ? true : %orig;
+}
+- (_Bool)isUpload4kVideoEnabled {
+    return [BHTManager autoHighestLoad] ? true : %orig;
+}
+- (_Bool)isUpload4kVideoEnabledByDefault {
+    return [BHTManager autoHighestLoad] ? true : %orig;
+}
+%end
+
 %hook _TtCV4Grok12GrokRootView9ViewModel
 - (BOOL)_isPremiumUser {
     return YES;
@@ -2451,6 +2476,22 @@ static NSNumber *BHTFeatureSwitchOverrideValueForKey(NSString *key) {
 %end
 
 %hook T1ImmersiveExploreCardView
+- (void)handleDoubleTap:(id)arg1 {
+    if ([BHTManager LikeConfirm]) {
+        [%c(FLEXAlert) makeAlert:^(FLEXAlert *make) {
+            make.message([[BHTBundle sharedBundle] localizedStringForKey:@"CONFIRM_ALERT_MESSAGE"]);
+            make.button([[BHTBundle sharedBundle] localizedStringForKey:@"YES_BUTTON_TITLE"]).handler(^(NSArray<NSString *> *strings) {
+                %orig;
+            });
+            make.button([[BHTBundle sharedBundle] localizedStringForKey:@"NO_BUTTON_TITLE"]).cancelStyle();
+        } showFrom:topMostController()];
+    } else {
+        return %orig;
+    }
+}
+%end
+
+%hook _TtC14T1TwitterSwift32ImmersiveDoubleTapLikePluginView
 - (void)handleDoubleTap:(id)arg1 {
     if ([BHTManager LikeConfirm]) {
         [%c(FLEXAlert) makeAlert:^(FLEXAlert *make) {
@@ -2603,7 +2644,7 @@ static NSNumber *BHTFeatureSwitchOverrideValueForKey(NSString *key) {
 %new - (void)customFontsHandler {
     if ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Fonts/AddedFontCache.plist"]) {
         NSAttributedString *AttString = [[NSAttributedString alloc] initWithString:[[BHTBundle sharedBundle] localizedStringForKey:@"CUSTOM_FONTS_MENU_TITLE"] attributes:@{
-            NSFontAttributeName: [[%c(TAEStandardFontGroup) sharedFontGroup] headline2BoldFont],
+            NSFontAttributeName: BHTHeadline2BoldFont(),
             NSForegroundColorAttributeName: UIColor.labelColor
         }];
         TFNActiveTextItem *title = [[%c(TFNActiveTextItem) alloc] initWithTextModel:[[%c(TFNAttributedTextModel) alloc] initWithAttributedString:AttString] activeRanges:nil];
@@ -5266,4 +5307,28 @@ static NSBundle *BHBundle() {
             self.tintColor = [UIColor blackColor];
         }
     }
+%end
+
+%hook TFNBarButtonItemButton
+
+- (void)didMoveToWindow {
+    %orig;
+    if (self.window) {
+        self.tintColor = [UIColor blackColor];
+    }
+}
+
+- (void)setTintColor:(UIColor *)tintColor {
+    BOOL isDark = BHT_isTwitterDarkThemeActive();
+    UIColor *correctColor = isDark ? [UIColor whiteColor] : [UIColor blackColor];
+    %orig(correctColor);
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    %orig(previousTraitCollection);
+    if ([self.traitCollection hasDifferentColorAppearanceComparedToTraitCollection:previousTraitCollection]) {
+        self.tintColor = [UIColor blackColor];
+    }
+}
+
 %end
