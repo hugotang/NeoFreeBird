@@ -18,6 +18,7 @@
 #import "Colours/Colours.h"
 #import "BHTManager.h"
 #import "BHDimPalette.h"
+#import "Compatibility/BHTTwitter128Compatibility.h"
 #import <math.h>
 #import "BHTBundle/BHTBundle.h"
 #import "TWHeaders.h"
@@ -4889,6 +4890,7 @@ static char kManualRefreshInProgressKey;
     [TweetSourceHelper loadCachedCookies];
 
     %init;
+    BHTInstallTwitter128Compatibility();
     // Add observers for both window and theme changes
     [[NSNotificationCenter defaultCenter] addObserverForName:UIWindowDidBecomeVisibleNotification
                                                     object:nil

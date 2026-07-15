@@ -13,6 +13,7 @@ NeoFreeBird is a Theos-based iOS tweak project for Twitter/X customization. The 
 ## Current Structure
 
 - `Tweak.x`: Logos hook definitions and shared helper functions for runtime behavior changes.
+- `Compatibility/`: version-specific runtime symbol and Objective-C method hooks.
 - `BHTManager.*`: central preference and feature-state access.
 - `BHDownload/`: download-related logic.
 - `BHTBundle/`: bundle/resource access helpers.
@@ -21,6 +22,77 @@ NeoFreeBird is a Theos-based iOS tweak project for Twitter/X customization. The 
 - `.github/workflows/build.yml`: CI build workflow.
 
 ## Change Log
+
+### 2026-07-16 - Add Twitter 12.8 compatibility hooks
+
+Files changed:
+
+- `Compatibility/BHTTwitter128Compatibility.h`
+- `Compatibility/BHTTwitter128Compatibility.m`
+- `Makefile`
+- `Tweak.x`
+- `PROJECT_CONTEXT.md`
+
+What changed:
+
+- Added a dedicated runtime compatibility module for Twitter 12.8 instead of
+  adding more version-specific implementation to the already large `Tweak.x`.
+- Added function hooks for the Twitter 12.8 Swift getters
+  `GrokFeatureAccess.isPremiumUser` and
+  `GrokRootView.ViewModel.isPremiumUser`. Twitter 12.8 still exposes the old
+  Objective-C class and `_isPremiumUser` strings, but its class metadata no
+  longer exposes that getter as an Objective-C method, so the legacy Logos hook
+  alone cannot cover the new path.
+- Added guarded message hooks for
+  `T1FleetLineHeaderController._t1_configureFleets_helper` and
+  `_t1_shouldShowFleetLine`. These are the Twitter 12.8 replacements for the
+  removed home-controller `_t1_initializeFleets` path used by the Hide Spaces
+  Bar setting.
+- The configure hook removes an already-created fleet line when hiding is
+  enabled and otherwise preserves the original method. The visibility hook
+  returns `NO` only while the setting is enabled, covering later visibility
+  refreshes as well as initial setup.
+- Updated the tweak source list to compile Objective-C modules in
+  `Compatibility/`, and invoked the compatibility installer from the main
+  Logos constructor after `%init`.
+
+Behavior impact:
+
+- Existing hooks remain available for older Twitter versions.
+- Twitter 12.8 uses its current Swift Grok access getters and fleet-line
+  controller without hard-coded image offsets.
+- Missing 12.8 classes or symbols are skipped, so the compatibility module
+  degrades safely on other supported versions.
+
+IDA verification notes:
+
+- `TwitterAppSPMMigration.framework` contains
+  `_$s4Grok0A13FeatureAccessC13isPremiumUserSbvg` at `0xf49e9c` and
+  `_$s4Grok0A8RootViewV0C5ModelC13isPremiumUserSbvg` at `0x1091e84`.
+- `T1Twitter.framework` contains
+  `-[T1FleetLineHeaderController _t1_configureFleets_helper]` at `0x1c5924`
+  and `-_t1_shouldShowFleetLine` at `0x1c5760`.
+- The configure helper creates or removes the fleet-line view according to the
+  app feature state, while the visibility method controls the container's
+  hidden state. Hooking both preserves layout and avoids unnecessary setup.
+- The existing 12.6 mappings remain present in 12.8: community inline actions
+  at `0x406838`/`0x406b60`, immersive double-tap like at `0x752be0`, all four
+  `T1LongerVideoUploadEnabledConfig` selectors, Premium upsell actions at
+  `0x1105da4`/`0x1106208`, like actions at `0x3337f0`/`0x14c35c`, and the DM
+  status/media accessors at `0x305da4`, `0x3066e0`, `0x306bfc`, and `0x2f8adc`.
+- The compose send path still enters `_t1_didTapSendButton:` before
+  `_t1_handleTweetWithSkipAltTextPrompt:`. No lower-level confirmation hook was
+  added because that would show duplicate confirmation alerts.
+- `T1Twitter.framework` still imports `TFNBarButtonItemButton` from
+  `TwitterSPMMigration.framework`, so the existing runtime class hook remains
+  the correct mapping even though its implementation is outside `T1Twitter`.
+
+Validation notes:
+
+- Run `git diff --check` and the available Theos build after changing these
+  runtime hooks.
+- Runtime validation still requires launching Twitter 12.8 on a hooked device
+  and exercising Grok plus the Hide Spaces Bar toggle.
 
 ### 2026-07-07 - Fix Logos `%orig` compile failure
 
