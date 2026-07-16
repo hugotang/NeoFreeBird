@@ -12,22 +12,6 @@ typedef BOOL (*BHTBoolMethodIMP)(id, SEL);
 static BHTVoidMethodIMP BHTOriginalConfigureFleetsHelper;
 static BHTBoolMethodIMP BHTOriginalShouldShowFleetLine;
 
-static const char *const BHTGrokPremiumGetterSymbols[] = {
-    "_$s4Grok0A13FeatureAccessC13isPremiumUserSbvg",
-    "_$s4Grok0A8RootViewV0C5ModelC13isPremiumUserSbvg",
-};
-
-enum {
-    BHTGrokPremiumGetterCount = sizeof(BHTGrokPremiumGetterSymbols) /
-        sizeof(BHTGrokPremiumGetterSymbols[0]),
-};
-
-static void *BHTOriginalGrokPremiumGetters[BHTGrokPremiumGetterCount];
-
-static BOOL BHTAlwaysPremiumUser(void) {
-    return YES;
-}
-
 static void BHTConfigureFleetsHelper(id self, SEL selector) {
     if (![BHTManager hideSpacesBar]) {
         if (BHTOriginalConfigureFleetsHelper) {
@@ -50,16 +34,6 @@ static BOOL BHTShouldShowFleetLine(id self, SEL selector) {
     return BHTOriginalShouldShowFleetLine
         ? BHTOriginalShouldShowFleetLine(self, selector)
         : YES;
-}
-
-static void BHTInstallGrokPremiumHooks(void) {
-    for (size_t index = 0; index < BHTGrokPremiumGetterCount; index++) {
-        void *getter = MSFindSymbol(NULL, BHTGrokPremiumGetterSymbols[index]);
-        if (getter) {
-            MSHookFunction(getter, (void *)&BHTAlwaysPremiumUser,
-                &BHTOriginalGrokPremiumGetters[index]);
-        }
-    }
 }
 
 static void BHTInstallFleetLineHooks(void) {
@@ -86,7 +60,6 @@ static void BHTInstallFleetLineHooks(void) {
 void BHTInstallTwitter128Compatibility(void) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        BHTInstallGrokPremiumHooks();
         BHTInstallFleetLineHooks();
     });
 }

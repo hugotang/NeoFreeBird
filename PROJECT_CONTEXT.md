@@ -23,6 +23,42 @@ NeoFreeBird is a Theos-based iOS tweak project for Twitter/X customization. The 
 
 ## Change Log
 
+### 2026-07-16 - Remove Twitter 12.8 Grok function hooks for startup isolation
+
+Files changed:
+
+- `Compatibility/BHTTwitter128Compatibility.m`
+- `PROJECT_CONTEXT.md`
+
+What changed:
+
+- Removed the two `MSFindSymbol`/`MSHookFunction` hooks for
+  `GrokFeatureAccess.isPremiumUser` and
+  `GrokRootView.ViewModel.isPremiumUser` from the 12.8 compatibility installer.
+- Kept the legacy Objective-C Grok Logos hook for older app versions.
+- Kept both `T1FleetLineHeaderController` hooks for the Twitter 12.8 Hide Spaces
+  Bar path.
+
+Why:
+
+- A Twitter 12.8 device build stalled on the launch screen after the Swift
+  function hooks were introduced. The timing correlation does not prove the
+  exact root cause, but constructor-time Swift function patching is the highest
+  risk addition and is being removed first to isolate startup behavior.
+
+Behavior impact:
+
+- Twitter 12.8 Grok premium-state overriding is intentionally not mapped while
+  this startup issue is isolated.
+- Other IDA-confirmed 12.8 mappings and the Spaces compatibility hooks are
+  unchanged.
+
+Validation notes:
+
+- Static validation must include `git diff --check`.
+- Device validation must first confirm whether Twitter 12.8 now passes the
+  launch screen. If it still stalls, isolate the Fleet Line installer next.
+
 ### 2026-07-16 - Add Twitter 12.8 compatibility hooks
 
 Files changed:
