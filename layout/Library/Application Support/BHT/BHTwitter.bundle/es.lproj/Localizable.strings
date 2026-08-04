@@ -76,6 +76,9 @@
 
 "DISABLE_SENSITIVE_TWEET_WARNINGS_OPTION_TITLE" = "Sin advertencias de contenido sensible";
 
+"BYPASS_AGE_VERIFICATION_OPTION_TITLE" = "Omitir la verificación de edad";
+"BYPASS_AGE_VERIFICATION_OPTION_DETAIL_TITLE" = "Omite el proceso de verificación de edad para el contenido sensible.";
+
 "HIDE_GROK_ANALYZE_BUTTON_TITLE" = "Ocultar botón de análisis Grok";
 "HIDE_GROK_ANALYZE_BUTTON_DETAIL_TITLE" = "Oculta el botón Grok Analyze en los Tweets.";
 

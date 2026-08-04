@@ -76,6 +76,9 @@
 
 "DISABLE_SENSITIVE_TWEET_WARNINGS_OPTION_TITLE" = "Hassas içerik uyarısı yok";
 
+"BYPASS_AGE_VERIFICATION_OPTION_TITLE" = "Yaş doğrulamasını atla";
+"BYPASS_AGE_VERIFICATION_OPTION_DETAIL_TITLE" = "Hassas içeriklerde yaş doğrulama adımını atlar.";
+
 "HIDE_GROK_ANALYZE_BUTTON_TITLE" = "Grok analiz düğmelerini gizle";
 "HIDE_GROK_ANALYZE_BUTTON_DETAIL_TITLE" = "Tweetlerdeki Grok Analyze düğmesini gizler.";
 

@@ -80,6 +80,9 @@
 
 "DISABLE_SENSITIVE_TWEET_WARNINGS_OPTION_TITLE" = "Bez ostrzeżeń o wrażliwych treściach";
 
+"BYPASS_AGE_VERIFICATION_OPTION_TITLE" = "Pomiń weryfikację wieku";
+"BYPASS_AGE_VERIFICATION_OPTION_DETAIL_TITLE" = "Pomija weryfikację wieku podczas wyświetlania treści wrażliwych.";
+
 "HIDE_GROK_ANALYZE_BUTTON_TITLE" = "Ukryj przyciski analizy Grok";
 "HIDE_GROK_ANALYZE_BUTTON_DETAIL_TITLE" = "Ukrywa przycisk Grok Analyze w Tweetach.";
 

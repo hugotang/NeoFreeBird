@@ -81,6 +81,9 @@
 
 "DISABLE_SENSITIVE_TWEET_WARNINGS_OPTION_TITLE" = "Inga varningar för känsligt innehåll";
 
+"BYPASS_AGE_VERIFICATION_OPTION_TITLE" = "Hoppa över åldersverifiering";
+"BYPASS_AGE_VERIFICATION_OPTION_DETAIL_TITLE" = "Hoppar över åldersverifieringen för känsligt innehåll.";
+
 "HIDE_GROK_ANALYZE_BUTTON_TITLE" = "Dölj Grok-analysknappar";
 "HIDE_GROK_ANALYZE_BUTTON_DETAIL_TITLE" = "Döljer Grok-analysknappen i Tweets.";
 

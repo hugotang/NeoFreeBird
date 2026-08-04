@@ -77,6 +77,9 @@
 
 "DISABLE_SENSITIVE_TWEET_WARNINGS_OPTION_TITLE" = "بدون تحذيرات محتوى حساس";
 
+"BYPASS_AGE_VERIFICATION_OPTION_TITLE" = "تجاوز التحقق من العمر";
+"BYPASS_AGE_VERIFICATION_OPTION_DETAIL_TITLE" = "يتجاوز عملية التحقق من العمر عند عرض المحتوى الحساس.";
+
 "HIDE_GROK_ANALYZE_BUTTON_TITLE" = "إخفاء أزرار تحليل Grok";
 "HIDE_GROK_ANALYZE_BUTTON_DETAIL_TITLE" = "إخفاء زر Grok Analyze في التغريدات.";
 

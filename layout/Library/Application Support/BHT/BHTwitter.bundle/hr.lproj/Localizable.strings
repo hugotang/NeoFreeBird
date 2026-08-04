@@ -76,6 +76,9 @@
 
 "DISABLE_SENSITIVE_TWEET_WARNINGS_OPTION_TITLE" = "Bez upozorenja na osjetljiv sadržaj";
 
+"BYPASS_AGE_VERIFICATION_OPTION_TITLE" = "Preskoči provjeru dobi";
+"BYPASS_AGE_VERIFICATION_OPTION_DETAIL_TITLE" = "Preskače postupak provjere dobi za osjetljiv sadržaj.";
+
 "HIDE_GROK_ANALYZE_BUTTON_TITLE" = "Sakrij Grok gumb za analizu";
 "HIDE_GROK_ANALYZE_BUTTON_DETAIL_TITLE" = "Sakriva Grok Analyze gumb u tweetovima.";
 
