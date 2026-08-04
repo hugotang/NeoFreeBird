@@ -35,7 +35,6 @@ static NSString *_lastCopiedURL;
 
 @interface T1AppDelegate : UIResponder <UIApplicationDelegate>
 @property(retain, nonatomic) UIWindow *window;
-+ (id)launchTransitionProvider;
 @end
 
 

@@ -5256,18 +5256,6 @@ static UIView *findPlayerControlsInHierarchy(UIView *startView) {
 
 %end
 
-// MARK: Restore Launch Animation
-
-%hook T1AppDelegate
-+ (id)launchTransitionProvider {
-    Class T1AppLaunchTransitionClass = NSClassFromString(@"T1AppLaunchTransition");
-    if (T1AppLaunchTransitionClass) {
-        return [[T1AppLaunchTransitionClass alloc] init];
-    }
-    return nil;
-}
-%end
-
 // MARK: Source Label using T1ConversationFooterTextView
 
 %hook T1ConversationFooterTextView
