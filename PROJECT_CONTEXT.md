@@ -23,6 +23,86 @@ NeoFreeBird is a Theos-based iOS tweak project for Twitter/X customization. The 
 
 ## Change Log
 
+### 2026-08-04 - Add capability-gated Twitter 12.14 compatibility
+
+Files changed:
+
+- `Compatibility/BHTTwitter1214Compatibility.h`
+- `Compatibility/BHTTwitter1214Compatibility.m`
+- `Compatibility/BHTTabBarCompatibility.h`
+- `Compatibility/BHTTabBarCompatibility.m`
+- `Compatibility/BHTImmersiveTimestampCompatibility.h`
+- `Compatibility/BHTImmersiveTimestampCompatibility.m`
+- `Compatibility/BHTLaunchTransitionCompatibility.h`
+- `Compatibility/BHTLaunchTransitionCompatibility.m`
+- `tests/compatibility/Test-Twitter1214Compatibility.ps1`
+- `Tweak.x`
+- `TWHeaders.h`
+- `PROJECT_CONTEXT.md`
+
+What changed:
+
+- Added a Twitter 12.14 coordinator that installs three focused Objective-C
+  compatibility modules after Logos initialization.
+- Added a guarded hook for
+  `T1TabBarViewController._t1_updateAppearance:`. The new and legacy tab
+  appearance paths now share `BHTApplyCurrentThemeToTabBarController`, so
+  manual theme changes no longer call a removed selector or guess the new
+  method's appearance-mode argument.
+- Added a guarded `ImmersiveCardView.layoutSubviews` hook. It searches only the
+  current card, stops after 100 visited views, styles a matching elapsed/total
+  timestamp label, and leaves visibility under Twitter's control.
+- Replaced the unconditional `T1AppDelegate.launchTransitionProvider` Logos
+  hook with a runtime installer that requires the legacy app-delegate method
+  and `T1AppLaunchTransition` class. Twitter 12.14 has neither capability, so
+  its startup path is not patched; older versions retain the old override.
+- Added a selectable PowerShell contract test covering the tab, timestamp,
+  launch, and coordinator wiring contracts.
+
+Why:
+
+- Twitter 12.14 renamed the tab-controller appearance selector, moved the
+  immersive controls path into Swift card views, and removed the old launch
+  transition API. The previous Logos hooks still compiled but some silently
+  did nothing at runtime.
+- Runtime capability checks preserve working Twitter 12.8 and 12.12 paths and
+  avoid hard-coded app versions or image offsets.
+
+Behavior impact:
+
+- Classic tab icons are reapplied after Twitter 12.14 appearance updates and
+  during NeoFreeBird's direct theme refresh flow.
+- Immersive timestamp styling can follow card layout and reuse without forcing
+  the controls or timestamp label visible.
+- Restore Launch Animation remains available only on versions that still
+  provide the legacy method and transition class. It is intentionally a no-op
+  on Twitter 12.14.
+- Grok Premium remains intentionally unmapped. No Swift getter or
+  `MSHookFunction` hook was restored.
+- The existing `TPSTwitterFeatureSwitches` and `TFSFeatureSwitches` hooks remain
+  the active Twitter 12.14 feature-switch coverage; no replacement was added
+  for removed account-specific implementations.
+
+IDA verification notes:
+
+- Twitter 12.14 `T1Twitter.framework` implements
+  `-[T1TabBarViewController _t1_updateAppearance:]` at `0x210c80` with a signed
+  64-bit appearance-mode argument.
+- It implements
+  `-[_TtC14T1TwitterSwift17ImmersiveCardView layoutSubviews]` at `0xf0b108`.
+- The old immersive navigation/player callbacks and
+  `+[T1AppDelegate launchTransitionProvider]` are absent.
+
+Validation notes:
+
+- The contract test must pass for `Tab`, `Timestamp`, `Launch`, `Wiring`, and
+  `All` cases.
+- Static validation must include `git diff --check` and confirmation that the
+  new compatibility modules contain neither `MSHookFunction` nor Grok symbols.
+- A configured Theos/iOS toolchain is still required for build validation.
+- Device smoke testing must cover launch, live tab theme changes, immersive
+  control visibility, and immersive card reuse.
+
 ### 2026-07-16 - Remove Twitter 12.8 Grok function hooks for startup isolation
 
 Files changed:
