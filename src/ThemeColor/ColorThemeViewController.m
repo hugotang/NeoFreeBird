@@ -10,6 +10,7 @@
 
 #import "ColorThemeViewController.h"
 #import <UIKit/UIKit.h>
+#import "Compatibility/BHTTabBarCompatibility.h"
 #import "ColorSwatchControl.h"
 #import "Core/BHTBundle.h"
 #import "Core/TwitterChirpFont.h"
@@ -158,12 +159,8 @@ static UIColor* NativeAccentColor(NSUInteger option) {
     while (stack.count) {
         UIViewController* vc = stack.firstObject;
         [stack removeObjectAtIndex:0];
-        if ([vc isKindOfClass:t1TabBarVCClass] && [vc respondsToSelector:@selector(tabViews)]) {
-            for (id tab in [vc valueForKey:@"tabViews"]) {
-                if ([tab respondsToSelector:@selector(applyCurrentThemeToIcon)]) {
-                    [tab performSelector:@selector(applyCurrentThemeToIcon)];
-                }
-            }
+        if ([vc isKindOfClass:t1TabBarVCClass]) {
+            BHTApplyCurrentThemeToTabBarController(vc);
         }
         if (vc.presentedViewController) [stack addObject:vc.presentedViewController];
         if ([vc isKindOfClass:[UINavigationController class]])

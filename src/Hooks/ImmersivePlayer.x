@@ -4,14 +4,9 @@
 //
 
 #import "HookHelpers.h"
+#import <string.h>
 
 // MARK: - Immersive Player Timestamp
-
-// Field indexes in ImmersiveCardState's declaration order.
-enum {
-    CardStateFieldIsPanningBetweenCards = 19,
-    CardStateFieldIsChromeFadedOutWhilePanning = 20,
-};
 
 static const uint8_t* immersiveCardStateMetadata(void) {
     static const uint8_t* metadata;
@@ -28,17 +23,87 @@ static const uint8_t* immersiveCardStateMetadata(void) {
     return metadata;
 }
 
+static const uint8_t* immersiveCardStateDescriptor(void) {
+    const uint8_t* metadata = immersiveCardStateMetadata();
+    return metadata ? *(const uint8_t* const*)(metadata + 8) : NULL;
+}
+
+// Swift field records contain relative pointers to their reflection names.
+// Resolve by name because 12.14 inserted a state field before these flags,
+// shifting their declaration indexes from the 12.3 layout.
+static BOOL cardStateFieldIndexNamed(const char* fieldName,
+                                     uint32_t* outIndex) {
+    const uint8_t* descriptor = immersiveCardStateDescriptor();
+    if (!descriptor || !fieldName || !outIndex) {
+        return NO;
+    }
+
+    uint32_t numFields = *(const uint32_t*)(descriptor + 20);
+    const int32_t* fieldDescriptorOffset =
+        (const int32_t*)(descriptor + 16);
+    if (numFields == 0 || numFields > 256 ||
+        *fieldDescriptorOffset == 0) {
+        return NO;
+    }
+
+    const uint8_t* fieldDescriptor =
+        (const uint8_t*)fieldDescriptorOffset + *fieldDescriptorOffset;
+    uint16_t recordSize = *(const uint16_t*)(fieldDescriptor + 10);
+    uint32_t recordCount = *(const uint32_t*)(fieldDescriptor + 12);
+    if (recordSize < 12 || recordSize > 64 || recordCount != numFields) {
+        return NO;
+    }
+
+    for (uint32_t index = 0; index < recordCount; index++) {
+        const uint8_t* record = fieldDescriptor + 16 + index * recordSize;
+        const int32_t* nameOffset = (const int32_t*)(record + 8);
+        if (*nameOffset == 0) {
+            continue;
+        }
+
+        const char* name = (const char*)nameOffset + *nameOffset;
+        if (strcmp(name, fieldName) == 0) {
+            *outIndex = index;
+            return YES;
+        }
+    }
+
+    return NO;
+}
+
+static BOOL cardStateVisibilityFieldIndexes(uint32_t* outPanningIndex,
+                                            uint32_t* outChromeFadedIndex) {
+    static dispatch_once_t onceToken;
+    static BOOL resolved;
+    static uint32_t panningIndex;
+    static uint32_t chromeFadedIndex;
+    dispatch_once(&onceToken, ^{
+        resolved =
+            cardStateFieldIndexNamed("isPanningBetweenCards", &panningIndex) &&
+            cardStateFieldIndexNamed("isChromeFadedOutWhilePanning",
+                                     &chromeFadedIndex);
+    });
+
+    if (!resolved) {
+        return NO;
+    }
+
+    *outPanningIndex = panningIndex;
+    *outChromeFadedIndex = chromeFadedIndex;
+    return YES;
+}
+
 // Reads a Bool field through the struct's field offset vector, the same way the
 // app's own compiled accesses do, so byte offsets never have to be hardcoded.
 static BOOL cardStateBoolField(const uint8_t* state,
                                uint32_t fieldIndex,
                                BOOL* outValue) {
     const uint8_t* metadata = immersiveCardStateMetadata();
-    if (!metadata) {
+    const uint8_t* descriptor = immersiveCardStateDescriptor();
+    if (!metadata || !descriptor) {
         return NO;
     }
 
-    const uint8_t* descriptor = *(const uint8_t* const*)(metadata + 8);
     uint32_t numFields = *(const uint32_t*)(descriptor + 20);
     uint32_t offsetVectorOffset = *(const uint32_t*)(descriptor + 24);
     if (fieldIndex >= numFields || offsetVectorOffset == 0) {
@@ -69,14 +134,15 @@ static BOOL progressLabelAlphaFromState(id pluginView, CGFloat* outAlpha) {
     BOOL visible =
         displayModeTag == 1 && (displayModeCase < 1 || displayModeCase > 3);
 
-    if (visible) {
+    uint32_t panningIndex = 0;
+    uint32_t chromeFadedIndex = 0;
+    if (visible && cardStateVisibilityFieldIndexes(&panningIndex,
+                                                   &chromeFadedIndex)) {
         BOOL panning = NO, chromeFaded = NO;
-        if (cardStateBoolField(state, CardStateFieldIsPanningBetweenCards,
-                               &panning) &&
+        if (cardStateBoolField(state, panningIndex, &panning) &&
             panning) {
             visible = NO;
-        } else if (cardStateBoolField(state,
-                                      CardStateFieldIsChromeFadedOutWhilePanning,
+        } else if (cardStateBoolField(state, chromeFadedIndex,
                                       &chromeFaded) &&
                    chromeFaded) {
             visible = NO;

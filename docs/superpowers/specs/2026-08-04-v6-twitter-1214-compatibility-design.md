@@ -23,6 +23,8 @@ of scope.
 - Reapply v6 tab icon and label theming after the new 12.14 tab appearance
   callback.
 - Style the timestamp found inside a 12.14 `ImmersiveCardView` after layout.
+- Resolve the panning and chrome-fade fields used by the existing alpha hook
+  from Swift reflection names because their declaration indexes shifted.
 - Share tab reapplication with the live accent picker to avoid duplicate
   private-selector traversal.
 - Preserve the existing 12.3 immersive progress-label hook for older builds.
@@ -58,6 +60,13 @@ styles only a `UILabel` whose text matches an elapsed/duration timestamp. It
 does not set `hidden` or `alpha`, leaving immersive control visibility under
 Twitter's ownership.
 
+The retained alpha hook no longer assumes the 12.3 field indexes. It follows
+the relative `Fields` pointer in the Swift nominal type descriptor, validates
+the field-record bounds, and resolves `isPanningBetweenCards` and
+`isChromeFadedOutWhilePanning` by name. If reflection data is unavailable or
+has an unknown shape, the hook skips those optional checks and uses only the
+already-validated `displayMode` representation.
+
 ## Runtime Flow
 
 1. The compatibility bootstrap queues installation on the main queue.
@@ -88,3 +97,22 @@ contract, `git diff --check`, and a source scan for prohibited Grok/launch
 symbols. A Theos build is attempted only when the iOS toolchain is available;
 device smoke testing remains required for actual UIKit behavior.
 
+## Implementation Verification
+
+On 2026-08-04, IDA instance `13338` was verified against the Twitter 12.14
+`T1Twitter` binary before querying symbols:
+
+- `_t1_updateAppearance:` resolved at `0x210c80` with prototype
+  `void(self, SEL, signed __int64)`.
+- `ImmersiveCardView.layoutSubviews` resolved at `0xf0b108` with prototype
+  `void(self, SEL)`.
+- `T1TabBarViewController.tabViews` remained available at `0x2135cc`.
+- The 12.14 `ImmersiveCardState` descriptor reported 32 fields; panning and
+  chrome-fade moved from the 12.3 indexes `19/20` to `20/21` after a field was
+  inserted earlier in the struct.
+- `_t1_updateTabBarAppearance`, the old immersive progress-label callback,
+  and `+[T1AppDelegate launchTransitionProvider]` did not resolve.
+
+The Windows host had no `THEOS`, `bash`, `make`, `clang`, or WSL installation,
+so it could run the PowerShell contracts but could not produce a truthful
+Theos build result. Compilation and device smoke tests remain external gates.

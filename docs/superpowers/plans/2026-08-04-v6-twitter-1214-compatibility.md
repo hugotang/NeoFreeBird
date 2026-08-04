@@ -57,6 +57,8 @@
 - [ ] Find a timestamp label within at most 100 visited views.
 - [ ] Reapply timestamp styling when `restore_video_timestamp` is enabled,
   without changing visibility.
+- [ ] Replace fixed Swift state indexes in the retained alpha hook with
+  reflection-name lookup and a safe display-mode-only fallback.
 - [ ] Run the focused `Timestamp` contract and confirm it passes.
 
 ### Task 4: Wire The One-Time Installer
@@ -86,4 +88,3 @@
   instead of claiming a build passed.
 - [ ] Review the complete diff, commit the implementation, and push
   `codex/v6-i18n` to `origin`.
-
