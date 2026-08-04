@@ -247,7 +247,7 @@
 
 /*Tab bar*/
 "CUSTOM_TAB_BAR_SETTINGS_NAVIGATION_TITLE" = "Настройка вкладок";
-"CUSTOM_TAB_BAR_GRID_DETAIL" = "Tap a destination to add or remove it. Drag the bar below to reorder.";
+"CUSTOM_TAB_BAR_GRID_DETAIL" = "Нажмите пункт, чтобы добавить или удалить его. Перетащите панель ниже, чтобы изменить порядок.";
 "CUSTOM_TAB_BAR_RESET_MESSAGE" = "Вы уверены, что хотите сбросить навигацию к настройкам по умолчанию?";
 
 /* Restore tab labels */
@@ -271,37 +271,37 @@
 "SOURCE_UNAVAILABLE" = "Источник недоступен";
 
 /*App lock*/
-"PADLOCK_LOCKED_LABEL" = "Locked";
+"PADLOCK_LOCKED_LABEL" = "Заблокировано";
 
 /*Source labels*/
-"UNKNOWN_SOURCE" = "Unknown Source";
+"UNKNOWN_SOURCE" = "Неизвестный источник";
 
 /*Media downloads*/
-"DOWNLOAD_VIDEO_NUMBER_TITLE" = "Video %lu";
-"UNKNOWN_ERROR" = "An unknown error occurred.";
+"DOWNLOAD_VIDEO_NUMBER_TITLE" = "Видео %lu";
+"UNKNOWN_ERROR" = "Произошла неизвестная ошибка.";
 
 /*Custom fonts*/
-"INSTALL_IFONT_BUTTON_TITLE" = "iFont application";
-"FONT_SYSTEM_DEFAULT_SUBTITLE" = "System Default";
+"INSTALL_IFONT_BUTTON_TITLE" = "Приложение iFont";
+"FONT_SYSTEM_DEFAULT_SUBTITLE" = "Системный шрифт";
 
 /*Legacy login*/
-"LEGACY_LOGIN_INFO_LABEL" = "Log in with your username and password.\n\nGoogle and Apple sign-in aren't supported. If your account uses one of those, add a password to it first.";
-"LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Missing input";
-"LEGACY_LOGIN_MISSING_INPUT_MESSAGE" = "Enter username and password.";
-"LEGACY_LOGIN_VERIFYING_STATUS" = "Verifying…";
-"LEGACY_LOGIN_SIGNING_IN_STATUS" = "Signing in…";
-"LEGACY_LOGIN_UNAVAILABLE_TITLE" = "Unavailable";
-"LEGACY_LOGIN_CLASSES_MISSING_MESSAGE" = "Login classes missing.";
-"LEGACY_LOGIN_BUILD_COMMAND_FAILED_MESSAGE" = "Could not build command.";
-"LEGACY_LOGIN_CRASH_AVOIDED_TITLE" = "Crash avoided";
-"LEGACY_LOGIN_UNEXPECTED_RESPONSE_TITLE" = "Unexpected response";
-"LEGACY_LOGIN_NO_TOKEN_NO_CHALLENGE_MESSAGE" = "No token and no challenge.";
-"LEGACY_LOGIN_CHALLENGE_MISSING_INFO_MESSAGE" = "Challenge is missing its request id or URL.";
-"LEGACY_LOGIN_CHALLENGE_CLASSES_MISSING_MESSAGE" = "Challenge/host classes missing.";
-"LEGACY_LOGIN_BUILD_CHALLENGE_FAILED_MESSAGE" = "Could not build challenge.";
-"LEGACY_LOGIN_NO_TOKEN_MESSAGE" = "No token in response.";
-"LEGACY_LOGIN_FAILED_TITLE" = "Login failed";
-"LEGACY_LOGIN_NO_ACCOUNT_MESSAGE" = "No account was returned.";
-"LEGACY_LOGIN_RATE_LIMITED_TITLE" = "Likely rate limited (243)";
-"LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Too many attempts. Wait a while or switch network/VPN, then try again.\n\nDetails:\n%@";
-"LEGACY_LOGIN_UNKNOWN_ERROR" = "Unknown error";
+"LEGACY_LOGIN_INFO_LABEL" = "Войдите с помощью имени пользователя и пароля.\n\nВход через Google и Apple не поддерживается. Если ваша учётная запись использует один из этих способов, сначала добавьте к ней пароль.";
+"LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Не все поля заполнены";
+"LEGACY_LOGIN_MISSING_INPUT_MESSAGE" = "Введите имя пользователя и пароль.";
+"LEGACY_LOGIN_VERIFYING_STATUS" = "Проверка…";
+"LEGACY_LOGIN_SIGNING_IN_STATUS" = "Выполняется вход…";
+"LEGACY_LOGIN_UNAVAILABLE_TITLE" = "Недоступно";
+"LEGACY_LOGIN_CLASSES_MISSING_MESSAGE" = "Отсутствуют классы входа.";
+"LEGACY_LOGIN_BUILD_COMMAND_FAILED_MESSAGE" = "Не удалось создать команду.";
+"LEGACY_LOGIN_CRASH_AVOIDED_TITLE" = "Сбой предотвращён";
+"LEGACY_LOGIN_UNEXPECTED_RESPONSE_TITLE" = "Неожиданный ответ";
+"LEGACY_LOGIN_NO_TOKEN_NO_CHALLENGE_MESSAGE" = "Нет ни токена, ни проверки.";
+"LEGACY_LOGIN_CHALLENGE_MISSING_INFO_MESSAGE" = "В проверке отсутствует ID запроса или URL.";
+"LEGACY_LOGIN_CHALLENGE_CLASSES_MISSING_MESSAGE" = "Отсутствуют классы проверки или хоста.";
+"LEGACY_LOGIN_BUILD_CHALLENGE_FAILED_MESSAGE" = "Не удалось создать запрос проверки.";
+"LEGACY_LOGIN_NO_TOKEN_MESSAGE" = "В ответе нет токена.";
+"LEGACY_LOGIN_FAILED_TITLE" = "Не удалось войти";
+"LEGACY_LOGIN_NO_ACCOUNT_MESSAGE" = "Учётная запись не была возвращена.";
+"LEGACY_LOGIN_RATE_LIMITED_TITLE" = "Вероятно, достигнут лимит запросов (243)";
+"LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Слишком много попыток. Подождите или смените сеть/VPN, затем повторите попытку.\n\nПодробности:\n%@";
+"LEGACY_LOGIN_UNKNOWN_ERROR" = "Неизвестная ошибка";
