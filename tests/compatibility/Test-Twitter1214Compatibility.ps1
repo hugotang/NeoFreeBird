@@ -54,9 +54,11 @@ function Test-TimestampContract {
     Assert-Match $source 'ImmersiveCardView' "The immersive card class is not resolved."
     Assert-Match $source 'layoutSubviews' "The immersive layout selector is not hooked."
     Assert-Match $source 'restoreVideoTimestamp' "The timestamp preference is not respected."
-    Assert-Match $source 'BHT_StyledTimestamp' "Legacy and 12.14 timestamp styling are not deduplicated."
+    Assert-Match $source 'BHT_StyledTimestamp' "Legacy and 12.14 timestamp paths do not share a styling marker."
     Assert-Match $source 'BHTTimestampMaximumVisitedViews' "Timestamp traversal is not bounded."
     Assert-NotMatch $source 'setHidden:|\.hidden\s*=' "The 12.14 timestamp module must not force visibility."
+    $earlyReturnPattern = '(?s)static void BHTStyleTimestampLabel\(UILabel \*label\) \{\s*if \(\[objc_getAssociatedObject.*?\{\s*return;\s*\}'
+    Assert-NotMatch $source $earlyReturnPattern "Timestamp styling must be reapplied after each original layout."
 }
 
 function Test-LaunchContract {

@@ -90,9 +90,11 @@ function Test-TimestampContract {
     Assert-Match $source 'ImmersiveCardView' "The immersive card class is not resolved."
     Assert-Match $source 'layoutSubviews' "The immersive layout selector is not hooked."
     Assert-Match $source 'restoreVideoTimestamp' "The timestamp preference is not respected."
-    Assert-Match $source 'BHT_StyledTimestamp' "Legacy and 12.14 timestamp styling are not deduplicated."
+    Assert-Match $source 'BHT_StyledTimestamp' "Legacy and 12.14 timestamp paths do not share a styling marker."
     Assert-Match $source 'BHTTimestampMaximumVisitedViews' "Timestamp traversal is not bounded."
     Assert-NotMatch $source 'setHidden:|\.hidden\s*=' "The 12.14 timestamp module must not force visibility."
+    $earlyReturnPattern = '(?s)static void BHTStyleTimestampLabel\(UILabel \*label\) \{\s*if \(\[objc_getAssociatedObject.*?\{\s*return;\s*\}'
+    Assert-NotMatch $source $earlyReturnPattern "Timestamp styling must be reapplied after each original layout."
 }
 
 function Test-LaunchContract {
@@ -298,7 +300,6 @@ NS_ASSUME_NONNULL_END
 #import <substrate.h>
 
 static const NSUInteger BHTTimestampMaximumVisitedViews = 100;
-static char BHTTimestampStyleKey;
 
 typedef void (*BHTLayoutSubviewsIMP)(UIView *, SEL);
 
@@ -341,11 +342,6 @@ static UILabel *BHTFindTimestampLabel(UIView *rootView) {
 }
 
 static void BHTStyleTimestampLabel(UILabel *label) {
-    if ([objc_getAssociatedObject(label, &BHTTimestampStyleKey) boolValue] ||
-        [objc_getAssociatedObject(label, "BHT_StyledTimestamp") boolValue]) {
-        return;
-    }
-
     label.font = [UIFont systemFontOfSize:14.0];
     label.textColor = UIColor.whiteColor;
     label.textAlignment = NSTextAlignmentCenter;
@@ -362,8 +358,6 @@ static void BHTStyleTimestampLabel(UILabel *label) {
     label.frame = frame;
     label.layer.cornerRadius = frame.size.height / 2.0;
     label.layer.masksToBounds = YES;
-    objc_setAssociatedObject(label, &BHTTimestampStyleKey, @YES,
-        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(label, "BHT_StyledTimestamp", @YES,
         OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
@@ -667,7 +661,7 @@ Expected: exit code `0` and `Twitter 12.14 compatibility contract passed: All`.
 
 ```powershell
 git diff --check
-rg -n "MSHookFunction|\$s4Grok" Compatibility
+rg -n 'MSHookFunction|\$s4Grok' Compatibility
 ```
 
 Expected: `git diff --check` exits `0`. The `rg` command exits `1` with no

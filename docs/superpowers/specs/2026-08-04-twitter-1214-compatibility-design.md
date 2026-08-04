@@ -84,8 +84,9 @@ the class owns that selector. After the original layout, it does nothing unless
 When enabled, the module searches only inside that immersive card for a label
 whose text matches an elapsed/duration timestamp form. It applies the existing
 timestamp font, foreground color, background color, alignment, padding, and
-corner radius. The same associated-object marker used by the legacy timestamp
-logic prevents duplicate styling when old and new paths overlap.
+corner radius. It retains the associated-object marker used by the legacy
+timestamp logic, but reapplies styling idempotently after every original layout
+so a reused card or a Twitter frame reset cannot discard the padding.
 
 The module does not force visibility. Twitter's card hierarchy continues to
 hide and show the timestamp with its controls, avoiding a replacement for the

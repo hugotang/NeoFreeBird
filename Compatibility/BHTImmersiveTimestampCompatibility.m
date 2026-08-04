@@ -7,7 +7,6 @@
 #import <substrate.h>
 
 static const NSUInteger BHTTimestampMaximumVisitedViews = 100;
-static char BHTTimestampStyleKey;
 
 typedef void (*BHTLayoutSubviewsIMP)(UIView *, SEL);
 
@@ -50,11 +49,6 @@ static UILabel *BHTFindTimestampLabel(UIView *rootView) {
 }
 
 static void BHTStyleTimestampLabel(UILabel *label) {
-    if ([objc_getAssociatedObject(label, &BHTTimestampStyleKey) boolValue] ||
-        [objc_getAssociatedObject(label, "BHT_StyledTimestamp") boolValue]) {
-        return;
-    }
-
     label.font = [UIFont systemFontOfSize:14.0];
     label.textColor = UIColor.whiteColor;
     label.textAlignment = NSTextAlignmentCenter;
@@ -71,8 +65,6 @@ static void BHTStyleTimestampLabel(UILabel *label) {
     label.frame = frame;
     label.layer.cornerRadius = frame.size.height / 2.0;
     label.layer.masksToBounds = YES;
-    objc_setAssociatedObject(label, &BHTTimestampStyleKey, @YES,
-        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(label, "BHT_StyledTimestamp", @YES,
         OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
