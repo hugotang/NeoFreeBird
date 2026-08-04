@@ -242,12 +242,12 @@
 "COPY_PROFILE_INFO_MENU_OPTION_5" = "Ort kopieren";
 
 /*Theme*/
-"THEME_SETTINGS_NAVIGATION_TITLE" = "Theme";
+"THEME_SETTINGS_NAVIGATION_TITLE" = "Design";
 "THEME_SETTINGS_NAVIGATION_DETAIL" = "Wähle eine Themenfarbe, die nur du sehen kannst.";
 
 /*Tab bar*/
 "CUSTOM_TAB_BAR_SETTINGS_NAVIGATION_TITLE" = "Benutzerdefinierte Navigation";
-"CUSTOM_TAB_BAR_GRID_DETAIL" = "Tap a destination to add or remove it. Drag the bar below to reorder.";
+"CUSTOM_TAB_BAR_GRID_DETAIL" = "Tippe auf ein Ziel, um es hinzuzufügen oder zu entfernen. Ziehe die Leiste unten, um die Reihenfolge zu ändern.";
 "CUSTOM_TAB_BAR_RESET_MESSAGE" = "Möchtest du die Navigationsleiste wirklich auf Standard zurücksetzen?";
 
 /* Restore tab labels */
@@ -271,37 +271,37 @@
 "SOURCE_UNAVAILABLE" = "Quelle nicht verfügbar";
 
 /*App lock*/
-"PADLOCK_LOCKED_LABEL" = "Locked";
+"PADLOCK_LOCKED_LABEL" = "Gesperrt";
 
 /*Source labels*/
-"UNKNOWN_SOURCE" = "Unknown Source";
+"UNKNOWN_SOURCE" = "Unbekannte Quelle";
 
 /*Media downloads*/
 "DOWNLOAD_VIDEO_NUMBER_TITLE" = "Video %lu";
-"UNKNOWN_ERROR" = "An unknown error occurred.";
+"UNKNOWN_ERROR" = "Ein unbekannter Fehler ist aufgetreten.";
 
 /*Custom fonts*/
-"INSTALL_IFONT_BUTTON_TITLE" = "iFont application";
-"FONT_SYSTEM_DEFAULT_SUBTITLE" = "System Default";
+"INSTALL_IFONT_BUTTON_TITLE" = "iFont-App";
+"FONT_SYSTEM_DEFAULT_SUBTITLE" = "Systemstandard";
 
 /*Legacy login*/
-"LEGACY_LOGIN_INFO_LABEL" = "Log in with your username and password.\n\nGoogle and Apple sign-in aren't supported. If your account uses one of those, add a password to it first.";
-"LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Missing input";
-"LEGACY_LOGIN_MISSING_INPUT_MESSAGE" = "Enter username and password.";
-"LEGACY_LOGIN_VERIFYING_STATUS" = "Verifying…";
-"LEGACY_LOGIN_SIGNING_IN_STATUS" = "Signing in…";
-"LEGACY_LOGIN_UNAVAILABLE_TITLE" = "Unavailable";
-"LEGACY_LOGIN_CLASSES_MISSING_MESSAGE" = "Login classes missing.";
-"LEGACY_LOGIN_BUILD_COMMAND_FAILED_MESSAGE" = "Could not build command.";
-"LEGACY_LOGIN_CRASH_AVOIDED_TITLE" = "Crash avoided";
-"LEGACY_LOGIN_UNEXPECTED_RESPONSE_TITLE" = "Unexpected response";
-"LEGACY_LOGIN_NO_TOKEN_NO_CHALLENGE_MESSAGE" = "No token and no challenge.";
-"LEGACY_LOGIN_CHALLENGE_MISSING_INFO_MESSAGE" = "Challenge is missing its request id or URL.";
-"LEGACY_LOGIN_CHALLENGE_CLASSES_MISSING_MESSAGE" = "Challenge/host classes missing.";
-"LEGACY_LOGIN_BUILD_CHALLENGE_FAILED_MESSAGE" = "Could not build challenge.";
-"LEGACY_LOGIN_NO_TOKEN_MESSAGE" = "No token in response.";
-"LEGACY_LOGIN_FAILED_TITLE" = "Login failed";
-"LEGACY_LOGIN_NO_ACCOUNT_MESSAGE" = "No account was returned.";
-"LEGACY_LOGIN_RATE_LIMITED_TITLE" = "Likely rate limited (243)";
-"LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Too many attempts. Wait a while or switch network/VPN, then try again.\n\nDetails:\n%@";
-"LEGACY_LOGIN_UNKNOWN_ERROR" = "Unknown error";
+"LEGACY_LOGIN_INFO_LABEL" = "Melde dich mit deinem Benutzernamen und Passwort an.\n\nDie Anmeldung mit Google oder Apple wird nicht unterstützt. Falls dein Konto eine dieser Methoden verwendet, füge ihm zuerst ein Passwort hinzu.";
+"LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Eingaben fehlen";
+"LEGACY_LOGIN_MISSING_INPUT_MESSAGE" = "Gib Benutzername und Passwort ein.";
+"LEGACY_LOGIN_VERIFYING_STATUS" = "Überprüfung läuft…";
+"LEGACY_LOGIN_SIGNING_IN_STATUS" = "Anmeldung läuft…";
+"LEGACY_LOGIN_UNAVAILABLE_TITLE" = "Nicht verfügbar";
+"LEGACY_LOGIN_CLASSES_MISSING_MESSAGE" = "Anmeldeklassen fehlen.";
+"LEGACY_LOGIN_BUILD_COMMAND_FAILED_MESSAGE" = "Befehl konnte nicht erstellt werden.";
+"LEGACY_LOGIN_CRASH_AVOIDED_TITLE" = "Absturz verhindert";
+"LEGACY_LOGIN_UNEXPECTED_RESPONSE_TITLE" = "Unerwartete Antwort";
+"LEGACY_LOGIN_NO_TOKEN_NO_CHALLENGE_MESSAGE" = "Weder Token noch Challenge vorhanden.";
+"LEGACY_LOGIN_CHALLENGE_MISSING_INFO_MESSAGE" = "Der Challenge fehlen die Anfrage-ID oder URL.";
+"LEGACY_LOGIN_CHALLENGE_CLASSES_MISSING_MESSAGE" = "Challenge-/Host-Klassen fehlen.";
+"LEGACY_LOGIN_BUILD_CHALLENGE_FAILED_MESSAGE" = "Challenge konnte nicht erstellt werden.";
+"LEGACY_LOGIN_NO_TOKEN_MESSAGE" = "Die Antwort enthält kein Token.";
+"LEGACY_LOGIN_FAILED_TITLE" = "Anmeldung fehlgeschlagen";
+"LEGACY_LOGIN_NO_ACCOUNT_MESSAGE" = "Es wurde kein Konto zurückgegeben.";
+"LEGACY_LOGIN_RATE_LIMITED_TITLE" = "Wahrscheinlich zu viele Anfragen (243)";
+"LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Zu viele Versuche. Warte etwas oder wechsle das Netzwerk/VPN und versuche es erneut.\n\nDetails:\n%@";
+"LEGACY_LOGIN_UNKNOWN_ERROR" = "Unbekannter Fehler";

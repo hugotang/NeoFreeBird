@@ -247,7 +247,7 @@
 
 /*Tab bar*/
 "CUSTOM_TAB_BAR_SETTINGS_NAVIGATION_TITLE" = "Modifier la barre d’onglets";
-"CUSTOM_TAB_BAR_GRID_DETAIL" = "Tap a destination to add or remove it. Drag the bar below to reorder.";
+"CUSTOM_TAB_BAR_GRID_DETAIL" = "Touchez une destination pour l’ajouter ou la supprimer. Faites glisser la barre ci-dessous pour modifier l’ordre.";
 "CUSTOM_TAB_BAR_RESET_MESSAGE" = "Voulez-vous vraiment réinitialiser la barre de navigation ?";
 
 /* Restore tab labels */
@@ -271,37 +271,37 @@
 "SOURCE_UNAVAILABLE" = "Source indisponible";
 
 /*App lock*/
-"PADLOCK_LOCKED_LABEL" = "Locked";
+"PADLOCK_LOCKED_LABEL" = "Verrouillé";
 
 /*Source labels*/
-"UNKNOWN_SOURCE" = "Unknown Source";
+"UNKNOWN_SOURCE" = "Source inconnue";
 
 /*Media downloads*/
-"DOWNLOAD_VIDEO_NUMBER_TITLE" = "Video %lu";
-"UNKNOWN_ERROR" = "An unknown error occurred.";
+"DOWNLOAD_VIDEO_NUMBER_TITLE" = "Vidéo %lu";
+"UNKNOWN_ERROR" = "Une erreur inconnue s’est produite.";
 
 /*Custom fonts*/
-"INSTALL_IFONT_BUTTON_TITLE" = "iFont application";
-"FONT_SYSTEM_DEFAULT_SUBTITLE" = "System Default";
+"INSTALL_IFONT_BUTTON_TITLE" = "Application iFont";
+"FONT_SYSTEM_DEFAULT_SUBTITLE" = "Police système par défaut";
 
 /*Legacy login*/
-"LEGACY_LOGIN_INFO_LABEL" = "Log in with your username and password.\n\nGoogle and Apple sign-in aren't supported. If your account uses one of those, add a password to it first.";
-"LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Missing input";
-"LEGACY_LOGIN_MISSING_INPUT_MESSAGE" = "Enter username and password.";
-"LEGACY_LOGIN_VERIFYING_STATUS" = "Verifying…";
-"LEGACY_LOGIN_SIGNING_IN_STATUS" = "Signing in…";
-"LEGACY_LOGIN_UNAVAILABLE_TITLE" = "Unavailable";
-"LEGACY_LOGIN_CLASSES_MISSING_MESSAGE" = "Login classes missing.";
-"LEGACY_LOGIN_BUILD_COMMAND_FAILED_MESSAGE" = "Could not build command.";
-"LEGACY_LOGIN_CRASH_AVOIDED_TITLE" = "Crash avoided";
-"LEGACY_LOGIN_UNEXPECTED_RESPONSE_TITLE" = "Unexpected response";
-"LEGACY_LOGIN_NO_TOKEN_NO_CHALLENGE_MESSAGE" = "No token and no challenge.";
-"LEGACY_LOGIN_CHALLENGE_MISSING_INFO_MESSAGE" = "Challenge is missing its request id or URL.";
-"LEGACY_LOGIN_CHALLENGE_CLASSES_MISSING_MESSAGE" = "Challenge/host classes missing.";
-"LEGACY_LOGIN_BUILD_CHALLENGE_FAILED_MESSAGE" = "Could not build challenge.";
-"LEGACY_LOGIN_NO_TOKEN_MESSAGE" = "No token in response.";
-"LEGACY_LOGIN_FAILED_TITLE" = "Login failed";
-"LEGACY_LOGIN_NO_ACCOUNT_MESSAGE" = "No account was returned.";
-"LEGACY_LOGIN_RATE_LIMITED_TITLE" = "Likely rate limited (243)";
-"LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Too many attempts. Wait a while or switch network/VPN, then try again.\n\nDetails:\n%@";
-"LEGACY_LOGIN_UNKNOWN_ERROR" = "Unknown error";
+"LEGACY_LOGIN_INFO_LABEL" = "Connectez-vous avec votre nom d’utilisateur et votre mot de passe.\n\nLa connexion avec Google ou Apple n’est pas prise en charge. Si votre compte utilise l’un de ces services, ajoutez-lui d’abord un mot de passe.";
+"LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Informations manquantes";
+"LEGACY_LOGIN_MISSING_INPUT_MESSAGE" = "Saisissez le nom d’utilisateur et le mot de passe.";
+"LEGACY_LOGIN_VERIFYING_STATUS" = "Vérification…";
+"LEGACY_LOGIN_SIGNING_IN_STATUS" = "Connexion…";
+"LEGACY_LOGIN_UNAVAILABLE_TITLE" = "Indisponible";
+"LEGACY_LOGIN_CLASSES_MISSING_MESSAGE" = "Les classes de connexion sont absentes.";
+"LEGACY_LOGIN_BUILD_COMMAND_FAILED_MESSAGE" = "Impossible de créer la commande.";
+"LEGACY_LOGIN_CRASH_AVOIDED_TITLE" = "Fermeture inattendue évitée";
+"LEGACY_LOGIN_UNEXPECTED_RESPONSE_TITLE" = "Réponse inattendue";
+"LEGACY_LOGIN_NO_TOKEN_NO_CHALLENGE_MESSAGE" = "Aucun jeton ni défi.";
+"LEGACY_LOGIN_CHALLENGE_MISSING_INFO_MESSAGE" = "L’identifiant de requête ou l’URL du défi est absent.";
+"LEGACY_LOGIN_CHALLENGE_CLASSES_MISSING_MESSAGE" = "Les classes du défi ou de l’hôte sont absentes.";
+"LEGACY_LOGIN_BUILD_CHALLENGE_FAILED_MESSAGE" = "Impossible de créer le défi.";
+"LEGACY_LOGIN_NO_TOKEN_MESSAGE" = "La réponse ne contient aucun jeton.";
+"LEGACY_LOGIN_FAILED_TITLE" = "Échec de la connexion";
+"LEGACY_LOGIN_NO_ACCOUNT_MESSAGE" = "Aucun compte n’a été renvoyé.";
+"LEGACY_LOGIN_RATE_LIMITED_TITLE" = "Limite de requêtes probablement atteinte (243)";
+"LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Trop de tentatives. Patientez un moment ou changez de réseau/VPN, puis réessayez.\n\nDétails :\n%@";
+"LEGACY_LOGIN_UNKNOWN_ERROR" = "Erreur inconnue";
