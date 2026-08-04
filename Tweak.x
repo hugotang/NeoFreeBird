@@ -18,7 +18,9 @@
 #import "Colours/Colours.h"
 #import "BHTManager.h"
 #import "BHDimPalette.h"
+#import "Compatibility/BHTTabBarCompatibility.h"
 #import "Compatibility/BHTTwitter128Compatibility.h"
+#import "Compatibility/BHTTwitter1214Compatibility.h"
 #import <math.h>
 #import "BHTBundle/BHTBundle.h"
 #import "TWHeaders.h"
@@ -4891,6 +4893,7 @@ static char kManualRefreshInProgressKey;
 
     %init;
     BHTInstallTwitter128Compatibility();
+    BHTInstallTwitter1214Compatibility();
     // Add observers for both window and theme changes
     [[NSNotificationCenter defaultCenter] addObserverForName:UIWindowDidBecomeVisibleNotification
                                                     object:nil
@@ -4993,16 +4996,7 @@ static char kManualRefreshInProgressKey;
 
 - (void)_t1_updateTabBarAppearance {
     %orig;
-
-    // Apply our custom theming after Twitter updates the tab bar
-    if ([BHTManager classicTabBarEnabled]) {
-        NSArray *tabViews = [self valueForKey:@"tabViews"];
-        for (id tabView in tabViews) {
-            if ([tabView respondsToSelector:@selector(bh_applyCurrentThemeToIcon)]) {
-                [tabView performSelector:@selector(bh_applyCurrentThemeToIcon)];
-            }
-        }
-    }
+    BHTApplyCurrentThemeToTabBarController(self);
 }
 
 %end
@@ -5018,10 +5012,7 @@ static void BHT_UpdateAllTabBarIcons(void) {
             UIViewController *rootVC = window.rootViewController;
 
             if ([rootVC isKindOfClass:NSClassFromString(@"T1TabBarViewController")]) {
-                // Use Twitter's internal tab bar refresh method if available
-                if ([rootVC respondsToSelector:@selector(_t1_updateTabBarAppearance)]) {
-                    [rootVC performSelector:@selector(_t1_updateTabBarAppearance)];
-                }
+                BHTApplyCurrentThemeToTabBarController(rootVC);
             }
         }
     }
@@ -5030,11 +5021,8 @@ static void BHT_UpdateAllTabBarIcons(void) {
 static void BHT_applyThemeToWindow(UIWindow *window) {
     if (!window || !window.rootViewController) return;
 
-    // Simply trigger Twitter's internal appearance update
     if ([window.rootViewController isKindOfClass:NSClassFromString(@"T1TabBarViewController")]) {
-        if ([window.rootViewController respondsToSelector:@selector(_t1_updateTabBarAppearance)]) {
-            [window.rootViewController performSelector:@selector(_t1_updateTabBarAppearance)];
-        }
+        BHTApplyCurrentThemeToTabBarController(window.rootViewController);
     }
 }
 
