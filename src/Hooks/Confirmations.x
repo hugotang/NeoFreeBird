@@ -75,6 +75,22 @@ static void ShowConfirmation(void (^confirmed)(void)) {
 
 %end
 
+// Keyboard shortcuts bypass the inline-action view and send action type 3
+// directly through T1StatusCell.
+%hook T1StatusCell
+
+- (void)handleLikeKeyCommand {
+    if (![BHTSettings boolForKey:@"like_confirm"]) {
+        return %orig;
+    }
+
+    ShowConfirmation(^{
+        %orig;
+    });
+}
+
+%end
+
 // The fullscreen media viewer's heart has its own action path.
 %hook T1SlideshowStatusView
 

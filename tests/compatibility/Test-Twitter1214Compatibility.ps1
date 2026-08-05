@@ -1,7 +1,7 @@
 param(
     [ValidateSet(
         "Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Premium",
-        "Wiring", "All"
+        "LikeKey", "Wiring", "All"
     )]
     [string]$Case = "All"
 )
@@ -185,6 +185,14 @@ function Test-PremiumContract {
         "The Premium signup action is not suppressed only while configured."
 }
 
+function Test-LikeKeyContract {
+    $confirmations = Get-RepoText "src/Hooks/Confirmations.x"
+
+    Assert-Match $confirmations `
+        '(?s)%hook\s+T1StatusCell.*handleLikeKeyCommand.*like_confirm.*ShowConfirmation.*%orig;' `
+        "Keyboard-triggered likes do not pass through the shared confirmation flow."
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -227,6 +235,7 @@ switch ($Case) {
     "LoggedOut" { Test-LoggedOutLaunchContract }
     "Upload" { Test-UploadContract }
     "Premium" { Test-PremiumContract }
+    "LikeKey" { Test-LikeKeyContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
@@ -235,6 +244,7 @@ switch ($Case) {
         Test-LoggedOutLaunchContract
         Test-UploadContract
         Test-PremiumContract
+        Test-LikeKeyContract
         Test-WiringContract
     }
 }
