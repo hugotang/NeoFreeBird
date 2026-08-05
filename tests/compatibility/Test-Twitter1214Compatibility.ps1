@@ -1,7 +1,7 @@
 param(
     [ValidateSet(
         "Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Premium",
-        "LikeKey", "Spaces", "Wiring", "All"
+        "LikeKey", "Spaces", "LegacyDM", "Wiring", "All"
     )]
     [string]$Case = "All"
 )
@@ -204,6 +204,28 @@ function Test-SpacesContract {
         "The Spaces visibility gate no longer preserves its native fallback."
 }
 
+function Test-LegacyDMContract {
+    $downloads = Get-RepoText "src/Hooks/MediaDownloads.x"
+
+    Assert-Match $downloads '%hook\s+T1DirectMessageConversationStatusView' `
+        "The legacy DM status-view fallback is not hooked."
+    Assert-Match $downloads `
+        '(?s)setViewModel:\(id\)viewModel.*%orig;.*InstallLegacyDMDownloadInteraction' `
+        "The legacy DM adapter does not install after Twitter updates its view model."
+    Assert-Match $downloads `
+        '(?s)inlineMediaViewModel.*viewModel.*playerSessionProducer.*sessionProducible.*mediaEntity.*variants' `
+        "The legacy DM media chain is incomplete."
+    Assert-Match $downloads `
+        '(?s)visibleMediaForwardView.*T1InlineMediaView.*EnumerateSubviewsRecursively' `
+        "The legacy DM visible-view fallback is missing."
+    Assert-Match $downloads `
+        '(?s)LegacyDMDownloadInteractionKey.*objc_getAssociatedObject.*UIContextMenuInteraction' `
+        "The legacy DM context menu is not installed idempotently."
+    Assert-Match $downloads `
+        '(?s)%hook\s+T1DirectMessageConversationStatusView.*download_videos.*DownloadInlineButton.*presentDownloadOptionsForMediaEntities' `
+        "The legacy DM fallback does not reuse the shared downloader."
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -248,6 +270,7 @@ switch ($Case) {
     "Premium" { Test-PremiumContract }
     "LikeKey" { Test-LikeKeyContract }
     "Spaces" { Test-SpacesContract }
+    "LegacyDM" { Test-LegacyDMContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
@@ -258,6 +281,7 @@ switch ($Case) {
         Test-PremiumContract
         Test-LikeKeyContract
         Test-SpacesContract
+        Test-LegacyDMContract
         Test-WiringContract
     }
 }

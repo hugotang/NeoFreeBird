@@ -72,6 +72,153 @@ static NSArray* DMVideoEntities(UIView* attachmentView) {
 }
 %end
 
+// The older status-based DM renderer still ships beside the Swift DM UI in
+// Twitter 12.14. Keep it as a capability-checked fallback and feed the entity
+// into the same downloader used by the modern path.
+static char LegacyDMDownloadInteractionKey;
+static char LegacyDMDownloadHandlerKey;
+
+static id LegacyDMObjectForSelector(id object, SEL selector) {
+    if (!object || ![object respondsToSelector:selector]) {
+        return nil;
+    }
+
+    return ((id (*)(id, SEL))objc_msgSend)(object, selector);
+}
+
+static UIView* LegacyDMVisibleMediaView(id statusView) {
+    id view = LegacyDMObjectForSelector(
+        statusView, NSSelectorFromString(@"visibleMediaForwardView"));
+    return [view isKindOfClass:UIView.class] ? view : nil;
+}
+
+static TFSTwitterEntityMedia* LegacyDMVideoEntity(id statusView) {
+    id inlineMedia = LegacyDMObjectForSelector(
+        statusView, NSSelectorFromString(@"inlineMedia"));
+    id viewModel = LegacyDMObjectForSelector(
+        inlineMedia, NSSelectorFromString(@"inlineMediaViewModel"));
+    if (!viewModel) {
+        viewModel = LegacyDMObjectForSelector(inlineMedia, @selector(viewModel));
+    }
+
+    if (!viewModel) {
+        UIView* visibleView = LegacyDMVisibleMediaView(statusView);
+        Class inlineMediaViewClass = objc_getClass("T1InlineMediaView");
+        if (visibleView && inlineMediaViewClass) {
+            __block id visibleViewModel = nil;
+            EnumerateSubviewsRecursively(visibleView, ^(UIView* currentView) {
+                if (!visibleViewModel &&
+                    [currentView isKindOfClass:inlineMediaViewClass]) {
+                    visibleViewModel = LegacyDMObjectForSelector(
+                        currentView, @selector(viewModel));
+                }
+            });
+            viewModel = visibleViewModel;
+        }
+    }
+
+    id producer = LegacyDMObjectForSelector(
+        viewModel, NSSelectorFromString(@"playerSessionProducer"));
+    id session = LegacyDMObjectForSelector(
+        producer, NSSelectorFromString(@"sessionProducible"));
+    id mediaEntity = LegacyDMObjectForSelector(
+        session, NSSelectorFromString(@"mediaEntity"));
+
+    Class mediaClass = objc_getClass("TFSTwitterEntityMedia");
+    if (!mediaClass || ![mediaEntity isKindOfClass:mediaClass]) {
+        return nil;
+    }
+
+    id videoInfo = LegacyDMObjectForSelector(mediaEntity, @selector(videoInfo));
+    NSArray* variants = LegacyDMObjectForSelector(videoInfo, @selector(variants));
+    return [variants isKindOfClass:NSArray.class] && variants.count > 0
+               ? mediaEntity
+               : nil;
+}
+
+static void InstallLegacyDMDownloadInteraction(id statusView) {
+    if (![BHTSettings boolForKey:@"download_videos"] ||
+        !LegacyDMVideoEntity(statusView)) {
+        return;
+    }
+
+    UIView* targetView = LegacyDMVisibleMediaView(statusView);
+    if (!targetView ||
+        objc_getAssociatedObject(targetView, &LegacyDMDownloadInteractionKey)) {
+        return;
+    }
+
+    UIContextMenuInteraction* interaction = [[UIContextMenuInteraction alloc]
+        initWithDelegate:(id<UIContextMenuInteractionDelegate>)statusView];
+    targetView.userInteractionEnabled = YES;
+    [targetView addInteraction:interaction];
+    objc_setAssociatedObject(targetView, &LegacyDMDownloadInteractionKey,
+                             interaction, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+%hook T1DirectMessageConversationStatusView
+
+- (void)setViewModel:(id)viewModel
+              options:(NSUInteger)options
+              account:(id)account {
+    %orig;
+    InstallLegacyDMDownloadInteraction(self);
+}
+
+%new
+- (UIContextMenuConfiguration*)contextMenuInteraction:(UIContextMenuInteraction*)interaction
+                       configurationForMenuAtLocation:(CGPoint)location {
+    if (![BHTSettings boolForKey:@"download_videos"] ||
+        !LegacyDMVideoEntity(self)) {
+        return nil;
+    }
+
+    __weak id weakStatusView = self;
+    return [UIContextMenuConfiguration
+        configurationWithIdentifier:nil
+                    previewProvider:nil
+                     actionProvider:^UIMenu* _Nullable(
+                         NSArray<UIMenuElement*>* _Nonnull suggestedActions) {
+                         UIAction* saveAction = [UIAction
+                             actionWithTitle:
+                                 [[BHTBundle sharedBundle]
+                                     localizedTwitterStringForKey:
+                                         @"DOWNLOAD_ACTIVITY_VIEW_LABEL"]
+                                       image:[UIImage systemImageNamed:
+                                                 @"square.and.arrow.down"]
+                                  identifier:nil
+                                     handler:^(__kindof UIAction* _Nonnull action) {
+                                         id statusView = weakStatusView;
+                                         TFSTwitterEntityMedia* media =
+                                             LegacyDMVideoEntity(statusView);
+                                         if (!media) {
+                                             return;
+                                         }
+
+                                         DownloadInlineButton* downloader =
+                                             objc_getAssociatedObject(
+                                                 statusView,
+                                                 &LegacyDMDownloadHandlerKey);
+                                         if (!downloader) {
+                                             downloader = [%c(DownloadInlineButton) new];
+                                             objc_setAssociatedObject(
+                                                 statusView,
+                                                 &LegacyDMDownloadHandlerKey,
+                                                 downloader,
+                                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+                                         }
+
+                                         [downloader
+                                             presentDownloadOptionsForMediaEntities:
+                                                 @[ media ]];
+                                     }];
+                         return [UIMenu menuWithTitle:@""
+                                             children:@[ saveAction ]];
+                     }];
+}
+
+%end
+
 // MARK: - Upload custom voice
 
 // Overwrites the recording at the attachment's existing file path, so the
