@@ -216,7 +216,20 @@ static NSString* const kJSInstJS =
     LegacyLoginViewController* login = [[LegacyLoginViewController alloc] init];
     login.asRootScreen = YES;
 
-    return [[UINavigationController alloc] initWithRootViewController:login];
+    Class navigationControllerClass = NSClassFromString(@"TFNNavigationController");
+    if (!navigationControllerClass ||
+        ![navigationControllerClass isSubclassOfClass:[UINavigationController class]]) {
+        navigationControllerClass = [UINavigationController class];
+    }
+
+    UINavigationController* navigationController =
+        [[navigationControllerClass alloc] initWithRootViewController:login];
+    SEL interactivePopsSelector = NSSelectorFromString(@"setSupportsInteractivePops:");
+    if ([navigationController respondsToSelector:interactivePopsSelector]) {
+        ((void (*)(id, SEL, BOOL))objc_msgSend)(navigationController,
+                                                interactivePopsSelector, NO);
+    }
+    return navigationController;
 }
 
 #pragma mark - View setup

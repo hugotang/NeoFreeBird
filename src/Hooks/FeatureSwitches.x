@@ -533,7 +533,14 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         %orig;
         return;
     }
-    completion([LegacyLoginViewController loginRootNavigationController]);
+
+    // Twitter 12.14 starts Quick Auth here while the caller continues its
+    // signed-out setup. Preserve that completion path and replace only the UI.
+    void (^nativeCompletion)(id) = ^(id nativeViewController) {
+        (void)nativeViewController;
+        completion([LegacyLoginViewController loginRootNavigationController]);
+    };
+    %orig(nativeCompletion);
 }
 
 %end

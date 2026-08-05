@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Tab", "Timestamp", "Launch", "Wiring", "All")]
+    [ValidateSet("Tab", "Timestamp", "Launch", "LoggedOut", "Wiring", "All")]
     [string]$Case = "All"
 )
 
@@ -125,6 +125,26 @@ function Test-LaunchContract {
         "The removed legacy launch transition path was reintroduced."
 }
 
+function Test-LoggedOutLaunchContract {
+    $switches = Get-RepoText "src/Hooks/FeatureSwitches.x"
+    $legacyLogin = Get-RepoText "src/LegacyLogin/LegacyLoginViewController.m"
+
+    Assert-Match $switches 'void\s*\(\^nativeCompletion\)\(id\)' `
+        "The signed-out onboarding hook does not preserve Twitter's native completion chain."
+    Assert-Match $switches '%orig\(nativeCompletion\)' `
+        "The signed-out onboarding hook bypasses Twitter's 12.14 Quick Auth initialization."
+    Assert-Match $switches `
+        '(?s)nativeCompletion.*completion\(\[LegacyLoginViewController loginRootNavigationController\]\)' `
+        "The native onboarding completion does not replace the final screen with the legacy login."
+    Assert-NotMatch $switches `
+        '(?s)if \(completion == nil\) \{\s*%orig;\s*return;\s*\}\s*completion\(' `
+        "The legacy login is still delivered synchronously before signed-out initialization finishes."
+    Assert-Match $legacyLogin 'NSClassFromString\(@"TFNNavigationController"\)' `
+        "The signed-out login root does not prefer Twitter's native navigation controller."
+    Assert-Match $legacyLogin 'setSupportsInteractivePops:' `
+        "The signed-out login root does not mirror Twitter's onboarding navigation contract."
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -164,11 +184,13 @@ switch ($Case) {
     "Tab" { Test-TabContract }
     "Timestamp" { Test-TimestampContract }
     "Launch" { Test-LaunchContract }
+    "LoggedOut" { Test-LoggedOutLaunchContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
         Test-TimestampContract
         Test-LaunchContract
+        Test-LoggedOutLaunchContract
         Test-WiringContract
     }
 }
