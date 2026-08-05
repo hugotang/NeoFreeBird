@@ -1,7 +1,7 @@
 param(
     [ValidateSet(
         "Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Premium",
-        "LikeKey", "Spaces", "LegacyDM", "Wiring", "All"
+        "LikeKey", "Spaces", "LegacyDM", "Retained", "Wiring", "All"
     )]
     [string]$Case = "All"
 )
@@ -226,6 +226,18 @@ function Test-LegacyDMContract {
         "The legacy DM fallback does not reuse the shared downloader."
 }
 
+function Test-RetainedBranchContract {
+    Test-UploadContract
+    Test-PremiumContract
+    Test-LikeKeyContract
+    Test-SpacesContract
+    Test-LegacyDMContract
+
+    $allSources = Get-SourceTreeText
+    Assert-NotMatch $allSources 'MSHookFunction|MSFindSymbol|\$s4Grok' `
+        "Grok Premium function hooks were restored during retained-branch integration."
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -271,17 +283,14 @@ switch ($Case) {
     "LikeKey" { Test-LikeKeyContract }
     "Spaces" { Test-SpacesContract }
     "LegacyDM" { Test-LegacyDMContract }
+    "Retained" { Test-RetainedBranchContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
         Test-TimestampContract
         Test-LaunchContract
         Test-LoggedOutLaunchContract
-        Test-UploadContract
-        Test-PremiumContract
-        Test-LikeKeyContract
-        Test-SpacesContract
-        Test-LegacyDMContract
+        Test-RetainedBranchContract
         Test-WiringContract
     }
 }
