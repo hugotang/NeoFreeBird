@@ -129,6 +129,11 @@ function Test-LoggedOutLaunchContract {
     $switches = Get-RepoText "src/Hooks/FeatureSwitches.x"
     $legacyLogin = Get-RepoText "src/LegacyLogin/LegacyLoginViewController.m"
 
+    Assert-Match $switches 'NSClassFromString\(@"BootViewController"\)' `
+        "The signed-out startup path is not capability-gated for Twitter 12.14's BootViewController."
+    Assert-Match $switches `
+        '(?s)- \(void\)viewBootViewController\s*\{.*accounts.*count.*viewSignedOutAnimated:.*return;.*%orig;' `
+        "An empty account store does not bypass Twitter 12.14's blocking BootViewController while preserving the native fallback."
     Assert-Match $switches 'void\s*\(\^nativeCompletion\)\(id\)' `
         "The signed-out onboarding hook does not preserve Twitter's native completion chain."
     Assert-Match $switches '%orig\(nativeCompletion\)' `

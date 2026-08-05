@@ -528,6 +528,39 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
 %hook T1HostViewController
 
+- (void)viewBootViewController {
+    Class bootClass = NSClassFromString(@"BootViewController");
+    if (!bootClass) {
+        bootClass = NSClassFromString(@"T1TwitterSwift.BootViewController");
+    }
+
+    Class twitterClass = objc_getClass("TFNTwitter");
+    id twitter = nil;
+    NSArray* accounts = nil;
+    if (bootClass &&
+        [twitterClass respondsToSelector:@selector(sharedTwitter)]) {
+        twitter = ((id (*)(id, SEL))objc_msgSend)(
+            (id)twitterClass, @selector(sharedTwitter));
+        if ([twitter respondsToSelector:@selector(accounts)]) {
+            accounts = ((id (*)(id, SEL))objc_msgSend)(
+                twitter, @selector(accounts));
+        }
+    }
+
+    SEL signedOutSelector = NSSelectorFromString(@"viewSignedOutAnimated:");
+    if ([accounts isKindOfClass:[NSArray class]] && accounts.count == 0 &&
+        [self respondsToSelector:signedOutSelector]) {
+        // Twitter 12.14's Boot screen waits on guest-scribe and notification
+        // readiness before it reports a signed-out state. A fully initialized,
+        // empty account store can enter the normal signed-out path immediately.
+        ((void (*)(id, SEL, BOOL))objc_msgSend)(
+            self, signedOutSelector, YES);
+        return;
+    }
+
+    %orig;
+}
+
 - (void)makeOnboardingViewControllerWithCompletion:(void (^)(id))completion {
     if (completion == nil) {
         %orig;
