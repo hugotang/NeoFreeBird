@@ -124,6 +124,18 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 // share this visibility gate, re-evaluated on every content or settings update.
 %hook T1FleetLineHeaderController
 
+- (void)_t1_configureFleets_helper {
+    if (![BHTSettings boolForKey:@"hide_spaces"]) {
+        %orig;
+        return;
+    }
+
+    SEL removeSelector = NSSelectorFromString(@"_t1_removeFleetLineView");
+    if ([self respondsToSelector:removeSelector]) {
+        ((void (*)(id, SEL))objc_msgSend)(self, removeSelector);
+    }
+}
+
 - (BOOL)_t1_shouldShowFleetLine {
     if ([BHTSettings boolForKey:@"hide_spaces"]) {
         return NO;

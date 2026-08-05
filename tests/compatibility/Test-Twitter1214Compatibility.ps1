@@ -1,7 +1,7 @@
 param(
     [ValidateSet(
         "Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Premium",
-        "LikeKey", "Wiring", "All"
+        "LikeKey", "Spaces", "Wiring", "All"
     )]
     [string]$Case = "All"
 )
@@ -193,6 +193,17 @@ function Test-LikeKeyContract {
         "Keyboard-triggered likes do not pass through the shared confirmation flow."
 }
 
+function Test-SpacesContract {
+    $timeline = Get-RepoText "src/Hooks/Timeline.x"
+
+    Assert-Match $timeline `
+        '(?s)_t1_configureFleets_helper.*!\[BHTSettings boolForKey:@"hide_spaces"\].*%orig;.*return;.*_t1_removeFleetLineView' `
+        "The configured Spaces line is not removed while preserving the native enabled path."
+    Assert-Match $timeline `
+        '(?s)_t1_shouldShowFleetLine.*hide_spaces.*return NO;.*%orig;' `
+        "The Spaces visibility gate no longer preserves its native fallback."
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -236,6 +247,7 @@ switch ($Case) {
     "Upload" { Test-UploadContract }
     "Premium" { Test-PremiumContract }
     "LikeKey" { Test-LikeKeyContract }
+    "Spaces" { Test-SpacesContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
@@ -245,6 +257,7 @@ switch ($Case) {
         Test-UploadContract
         Test-PremiumContract
         Test-LikeKeyContract
+        Test-SpacesContract
         Test-WiringContract
     }
 }
