@@ -131,7 +131,7 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
     }
 
     SEL removeSelector = NSSelectorFromString(@"_t1_removeFleetLineView");
-    if ([self respondsToSelector:removeSelector]) {
+    if ([(id)self respondsToSelector:removeSelector]) {
         ((void (*)(id, SEL))objc_msgSend)(self, removeSelector);
     }
 }

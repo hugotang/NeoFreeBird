@@ -295,6 +295,9 @@ function Test-SpacesContract {
     $timeline = Get-RepoText "src/Hooks/Timeline.x"
 
     Assert-Match $timeline `
+        '(?s)_t1_configureFleets_helper.*\[\(id\)self respondsToSelector:removeSelector\]' `
+        "The Spaces removal guard does not erase the forward-declared Logos receiver type."
+    Assert-Match $timeline `
         '(?s)_t1_configureFleets_helper.*!\[BHTSettings boolForKey:@"hide_spaces"\].*%orig;.*return;.*_t1_removeFleetLineView' `
         "The configured Spaces line is not removed while preserving the native enabled path."
     Assert-Match $timeline `
