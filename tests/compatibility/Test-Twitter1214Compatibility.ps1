@@ -49,6 +49,92 @@ function Assert-NotMatch {
     }
 }
 
+function Get-LogosHookText {
+    param([string]$Text, [string]$HookName)
+
+    $hookPattern = '(?m)^[ \t]*%hook[ \t]+' + [regex]::Escape($HookName) + '[ \t]*(?:\r?$)'
+    $hookMatches = [regex]::Matches($Text, $hookPattern)
+    if ($hookMatches.Count -ne 1) {
+        $failures.Add(
+            "Expected exactly one %hook $HookName declaration, found $($hookMatches.Count).")
+        return ""
+    }
+
+    $hookStart = $hookMatches[0].Index
+    $remainingText = $Text.Substring($hookStart + $hookMatches[0].Length)
+    $endMatch = [regex]::Match($remainingText, '(?m)^[ \t]*%end[ \t]*(?:\r?$)')
+    if (-not $endMatch.Success) {
+        $failures.Add("The %hook $HookName declaration has no matching %end.")
+        return ""
+    }
+
+    $nestedHookMatch = [regex]::Match(
+        $remainingText.Substring(0, $endMatch.Index),
+        '(?m)^[ \t]*%hook\b')
+    if ($nestedHookMatch.Success) {
+        $failures.Add("The %hook $HookName declaration is malformed: another %hook appears before %end.")
+        return ""
+    }
+
+    $hookLength = $hookMatches[0].Length + $endMatch.Index + $endMatch.Length
+    return $Text.Substring($hookStart, $hookLength)
+}
+
+function Get-BracedSourceBlock {
+    param([string]$Text, [string]$StartPattern, [string]$Description)
+
+    $startMatches = [regex]::Matches($Text, $StartPattern)
+    if ($startMatches.Count -ne 1) {
+        $failures.Add(
+            "Expected exactly one $Description declaration, found $($startMatches.Count).")
+        return ""
+    }
+
+    $startMatch = $startMatches[0]
+    $braceIndex = $Text.IndexOf('{', $startMatch.Index + $startMatch.Length)
+    if ($braceIndex -lt 0) {
+        $failures.Add("The $Description declaration has no opening brace.")
+        return ""
+    }
+    $betweenDeclarationAndBrace = $Text.Substring(
+        $startMatch.Index + $startMatch.Length,
+        $braceIndex - ($startMatch.Index + $startMatch.Length))
+    if ($betweenDeclarationAndBrace -notmatch '^\s*$') {
+        $failures.Add("The $Description declaration is malformed: its opening brace is not adjacent.")
+        return ""
+    }
+
+    $depth = 0
+    for ($index = $braceIndex; $index -lt $Text.Length; $index++) {
+        if ($Text[$index] -eq '{') {
+            $depth++
+        }
+        elseif ($Text[$index] -eq '}') {
+            $depth--
+            if ($depth -eq 0) {
+                return $Text.Substring($braceIndex, $index - $braceIndex + 1)
+            }
+        }
+    }
+
+    $failures.Add("The $Description body has unbalanced braces.")
+    return ""
+}
+
+function Assert-MatchCount {
+    param(
+        [string]$Text,
+        [string]$Pattern,
+        [int]$ExpectedCount,
+        [string]$Message
+    )
+
+    $actualCount = [regex]::Matches($Text, $Pattern).Count
+    if ($actualCount -ne $ExpectedCount) {
+        $failures.Add("$Message Expected $ExpectedCount match(es), found $actualCount.")
+    }
+}
+
 function Test-TabContract {
     $header = Get-RepoText "src/Compatibility/BHTTabBarCompatibility.h"
     $source = Get-RepoText "src/Compatibility/BHTTabBarCompatibility.m"
@@ -155,9 +241,7 @@ function Test-LoggedOutLaunchContract {
 
 function Test-UploadContract {
     $switches = Get-RepoText "src/Hooks/FeatureSwitches.x"
-
-    Assert-Match $switches '%hook\s+T1LongerVideoUploadEnabledConfig' `
-        "The Twitter 12.14 longer-video upload config is not hooked."
+    $uploadHook = Get-LogosHookText $switches "T1LongerVideoUploadEnabledConfig"
 
     foreach ($selector in @(
         "isUploadFullHDVideoEnabled",
@@ -165,9 +249,14 @@ function Test-UploadContract {
         "isUpload4kVideoEnabled",
         "isUpload4kVideoEnabledByDefault"
     )) {
-        Assert-Match $switches `
-            "(?s)- \(BOOL\)$selector\s*\{.*?auto_highest_load.*?%orig;" `
+        $getter = Get-BracedSourceBlock $uploadHook `
+            ('(?m)^[ \t]*-[ \t]*\(BOOL\)' + [regex]::Escape($selector) + '[ \t]*(?=\{)') `
+            "the $selector upload getter"
+        Assert-Match $getter `
+            '(?s)return\s+\[BHTSettings\s+boolForKey:@"auto_highest_load"\]\s*\?\s*YES\s*:\s*%orig\s*;' `
             "The $selector upload gate does not preserve its native fallback."
+        Assert-MatchCount $getter '%orig\b' 1 `
+            "The $selector upload getter must contain exactly one native fallback."
     }
 }
 
@@ -187,10 +276,19 @@ function Test-PremiumContract {
 
 function Test-LikeKeyContract {
     $confirmations = Get-RepoText "src/Hooks/Confirmations.x"
+    $statusCellHook = Get-LogosHookText $confirmations "T1StatusCell"
+    $likeKeyMethod = Get-BracedSourceBlock $statusCellHook `
+        '(?m)^[ \t]*-[ \t]*\(void\)handleLikeKeyCommand[ \t]*' `
+        "the handleLikeKeyCommand method"
 
-    Assert-Match $confirmations `
-        '(?s)%hook\s+T1StatusCell.*handleLikeKeyCommand.*like_confirm.*ShowConfirmation.*%orig;' `
+    Assert-Match $likeKeyMethod `
+        '(?s)if\s*\(\s*!\[BHTSettings\s+boolForKey:@"like_confirm"\]\s*\)\s*\{\s*return\s+%orig\s*;\s*\}' `
+        "Keyboard-triggered likes do not preserve the native path when confirmation is disabled."
+    Assert-Match $likeKeyMethod `
+        '(?s)ShowConfirmation\s*\(\s*\^\s*\{.*?%orig\s*;.*?\}\s*\)\s*;' `
         "Keyboard-triggered likes do not pass through the shared confirmation flow."
+    Assert-MatchCount $likeKeyMethod '%orig\b' 2 `
+        "The keyboard like handler must contain exactly the disabled-path and confirmation-block native calls."
 }
 
 function Test-SpacesContract {
@@ -206,24 +304,72 @@ function Test-SpacesContract {
 
 function Test-LegacyDMContract {
     $downloads = Get-RepoText "src/Hooks/MediaDownloads.x"
+    $selectorReader = Get-BracedSourceBlock $downloads `
+        '(?m)^[ \t]*static\s+id\s+LegacyDMObjectForSelector\s*\(id\s+object,\s*SEL\s+selector\)[ \t]*' `
+        "the LegacyDMObjectForSelector function"
+    Assert-Match $selectorReader `
+        '(?s)if\s*\(\s*!object\s*\|\|\s*!\[object\s+respondsToSelector:selector\]\s*\)\s*\{\s*return\s+nil\s*;\s*\}' `
+        "Legacy DM dynamic selector reads are not guarded for nil and respondsToSelector:."
+    Assert-Match $selectorReader `
+        '(?s)\}\s*return\s+\(\(id\s*\(\*\)\(id,\s*SEL\)\)objc_msgSend\)\(object,\s*selector\)\s*;' `
+        "Legacy DM dynamic selector reads do not use the guarded objc_msgSend path."
 
-    Assert-Match $downloads '%hook\s+T1DirectMessageConversationStatusView' `
-        "The legacy DM status-view fallback is not hooked."
-    Assert-Match $downloads `
-        '(?s)setViewModel:\(id\)viewModel.*%orig;.*InstallLegacyDMDownloadInteraction' `
-        "The legacy DM adapter does not install after Twitter updates its view model."
-    Assert-Match $downloads `
-        '(?s)inlineMediaViewModel.*viewModel.*playerSessionProducer.*sessionProducible.*mediaEntity.*variants' `
-        "The legacy DM media chain is incomplete."
-    Assert-Match $downloads `
-        '(?s)visibleMediaForwardView.*T1InlineMediaView.*EnumerateSubviewsRecursively' `
+    $videoEntity = Get-BracedSourceBlock $downloads `
+        '(?m)^[ \t]*static\s+TFSTwitterEntityMedia\s*\*\s*LegacyDMVideoEntity\s*\(id\s+statusView\)[ \t]*' `
+        "the LegacyDMVideoEntity function"
+    Assert-Match $videoEntity `
+        '(?s)LegacyDMVisibleMediaView\s*\(statusView\).*objc_getClass\s*\(\s*"T1InlineMediaView"\s*\).*EnumerateSubviewsRecursively' `
         "The legacy DM visible-view fallback is missing."
-    Assert-Match $downloads `
-        '(?s)LegacyDMDownloadInteractionKey.*objc_getAssociatedObject.*UIContextMenuInteraction' `
-        "The legacy DM context menu is not installed idempotently."
-    Assert-Match $downloads `
-        '(?s)%hook\s+T1DirectMessageConversationStatusView.*download_videos.*DownloadInlineButton.*presentDownloadOptionsForMediaEntities' `
-        "The legacy DM fallback does not reuse the shared downloader."
+    foreach ($dynamicRead in @(
+        'LegacyDMObjectForSelector\s*\(\s*statusView,\s*NSSelectorFromString\s*\(\s*@"inlineMedia"\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*inlineMedia,\s*NSSelectorFromString\s*\(\s*@"inlineMediaViewModel"\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*inlineMedia,\s*@selector\s*\(\s*viewModel\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*viewModel,\s*NSSelectorFromString\s*\(\s*@"playerSessionProducer"\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*producer,\s*NSSelectorFromString\s*\(\s*@"sessionProducible"\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*session,\s*NSSelectorFromString\s*\(\s*@"mediaEntity"\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*mediaEntity,\s*@selector\s*\(\s*videoInfo\s*\)\s*\)',
+        'LegacyDMObjectForSelector\s*\(\s*videoInfo,\s*@selector\s*\(\s*variants\s*\)\s*\)'
+    )) {
+        Assert-Match $videoEntity $dynamicRead `
+            "The legacy DM media chain does not route every dynamic read through LegacyDMObjectForSelector."
+    }
+
+    $installer = Get-BracedSourceBlock $downloads `
+        '(?m)^[ \t]*static\s+void\s+InstallLegacyDMDownloadInteraction\s*\(id\s+statusView\)[ \t]*' `
+        "the InstallLegacyDMDownloadInteraction function"
+    Assert-Match $installer `
+        '(?s)if\s*\(\s*!\[BHTSettings\s+boolForKey:@"download_videos"\]\s*\|\|\s*!LegacyDMVideoEntity\s*\(statusView\)\s*\)' `
+        "The legacy DM interaction installer does not guard its preference and media entity."
+    Assert-Match $installer `
+        'objc_getAssociatedObject\s*\(\s*targetView,\s*&LegacyDMDownloadInteractionKey\s*\)' `
+        "The legacy DM interaction installer does not read its existing association locally."
+    Assert-Match $installer 'addInteraction:\s*interaction' `
+        "The legacy DM interaction installer does not attach the context-menu interaction locally."
+    Assert-Match $installer `
+        'objc_setAssociatedObject\s*\(\s*targetView,\s*&LegacyDMDownloadInteractionKey\s*,' `
+        "The legacy DM interaction installer does not write its interaction association locally."
+
+    $statusViewHook = Get-LogosHookText $downloads "T1DirectMessageConversationStatusView"
+    $setViewModel = Get-BracedSourceBlock $statusViewHook `
+        '(?ms)^[ \t]*-[ \t]*\(void\)setViewModel:\(id\)viewModel\s+options:\(NSUInteger\)options\s+account:\(id\)account[ \t]*' `
+        "the legacy DM setViewModel:options:account: method"
+    Assert-MatchCount $setViewModel '%orig\b' 1 `
+        "The legacy DM view-model adapter must call Twitter exactly once."
+    Assert-Match $setViewModel `
+        '(?s)%orig\s*;\s*InstallLegacyDMDownloadInteraction\s*\(self\)\s*;' `
+        "The legacy DM adapter does not install after Twitter updates its view model."
+
+    $contextMenu = Get-BracedSourceBlock $statusViewHook `
+        '(?ms)^[ \t]*-[ \t]*\(UIContextMenuConfiguration\s*\*\s*\)contextMenuInteraction:\(UIContextMenuInteraction\s*\*\s*\)interaction\s+configurationForMenuAtLocation:\(CGPoint\)location[ \t]*' `
+        "the legacy DM context-menu method"
+    Assert-Match $contextMenu 'boolForKey:@"download_videos"' `
+        "The legacy DM context menu does not honor the download-videos preference."
+    Assert-Match $contextMenu 'LegacyDMVideoEntity\s*\(self\)' `
+        "The legacy DM context menu does not verify its media entity."
+    Assert-Match $contextMenu 'DownloadInlineButton' `
+        "The legacy DM context menu does not use the shared download button."
+    Assert-Match $contextMenu 'presentDownloadOptionsForMediaEntities' `
+        "The legacy DM context menu does not present the shared download options."
 }
 
 function Test-RetainedBranchContract {
