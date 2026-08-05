@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Tab", "Timestamp", "Launch", "LoggedOut", "Wiring", "All")]
+    [ValidateSet("Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Wiring", "All")]
     [string]$Case = "All"
 )
 
@@ -150,6 +150,24 @@ function Test-LoggedOutLaunchContract {
         "The signed-out login root does not mirror Twitter's onboarding navigation contract."
 }
 
+function Test-UploadContract {
+    $switches = Get-RepoText "src/Hooks/FeatureSwitches.x"
+
+    Assert-Match $switches '%hook\s+T1LongerVideoUploadEnabledConfig' `
+        "The Twitter 12.14 longer-video upload config is not hooked."
+
+    foreach ($selector in @(
+        "isUploadFullHDVideoEnabled",
+        "isUploadFullHDVideoEnabledByDefault",
+        "isUpload4kVideoEnabled",
+        "isUpload4kVideoEnabledByDefault"
+    )) {
+        Assert-Match $switches `
+            "(?s)- \(BOOL\)$selector\s*\{.*?auto_highest_load.*?%orig;" `
+            "The $selector upload gate does not preserve its native fallback."
+    }
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -190,12 +208,14 @@ switch ($Case) {
     "Timestamp" { Test-TimestampContract }
     "Launch" { Test-LaunchContract }
     "LoggedOut" { Test-LoggedOutLaunchContract }
+    "Upload" { Test-UploadContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
         Test-TimestampContract
         Test-LaunchContract
         Test-LoggedOutLaunchContract
+        Test-UploadContract
         Test-WiringContract
     }
 }

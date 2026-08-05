@@ -592,6 +592,26 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
 %end
 
+%hook T1LongerVideoUploadEnabledConfig
+
+- (BOOL)isUploadFullHDVideoEnabled {
+    return [BHTSettings boolForKey:@"auto_highest_load"] ? YES : %orig;
+}
+
+- (BOOL)isUploadFullHDVideoEnabledByDefault {
+    return [BHTSettings boolForKey:@"auto_highest_load"] ? YES : %orig;
+}
+
+- (BOOL)isUpload4kVideoEnabled {
+    return [BHTSettings boolForKey:@"auto_highest_load"] ? YES : %orig;
+}
+
+- (BOOL)isUpload4kVideoEnabledByDefault {
+    return [BHTSettings boolForKey:@"auto_highest_load"] ? YES : %orig;
+}
+
+%end
+
 // MARK: - Promoted content
 
 // API commands copy this off their context when building requests.
