@@ -1,5 +1,8 @@
 param(
-    [ValidateSet("Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Wiring", "All")]
+    [ValidateSet(
+        "Tab", "Timestamp", "Launch", "LoggedOut", "Upload", "Premium",
+        "Wiring", "All"
+    )]
     [string]$Case = "All"
 )
 
@@ -168,6 +171,20 @@ function Test-UploadContract {
     }
 }
 
+function Test-PremiumContract {
+    $ads = Get-RepoText "src/Hooks/Ads.x"
+
+    Assert-Match $ads `
+        '%hook\s+_TtC11TwitterHome32PremiumUpsellBarButtonItemPlugin' `
+        "The Twitter 12.14 Premium upsell bar-button plugin is not hooked."
+    Assert-Match $ads `
+        '(?s)rightBarButtonItem.*hide_premium_offer.*\? nil : %orig' `
+        "The Premium bar button does not preserve its native fallback."
+    Assert-Match $ads `
+        '(?s)showPremiumSignUp.*hide_premium_offer.*return;.*%orig;' `
+        "The Premium signup action is not suppressed only while configured."
+}
+
 function Test-WiringContract {
     $coordinator = Get-RepoText "src/Compatibility/BHTTwitter1214Compatibility.m"
     $bootstrap = Get-RepoText "src/Compatibility/BHTTwitter1214Bootstrap.x"
@@ -209,6 +226,7 @@ switch ($Case) {
     "Launch" { Test-LaunchContract }
     "LoggedOut" { Test-LoggedOutLaunchContract }
     "Upload" { Test-UploadContract }
+    "Premium" { Test-PremiumContract }
     "Wiring" { Test-WiringContract }
     "All" {
         Test-TabContract
@@ -216,6 +234,7 @@ switch ($Case) {
         Test-LaunchContract
         Test-LoggedOutLaunchContract
         Test-UploadContract
+        Test-PremiumContract
         Test-WiringContract
     }
 }

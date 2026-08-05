@@ -152,6 +152,24 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
 
 %end
 
+// MARK: - Premium home-bar upsell
+
+%hook _TtC11TwitterHome32PremiumUpsellBarButtonItemPlugin
+
+- (id)rightBarButtonItem {
+    return [BHTSettings boolForKey:@"hide_premium_offer"] ? nil : %orig;
+}
+
+- (void)showPremiumSignUp {
+    if ([BHTSettings boolForKey:@"hide_premium_offer"]) {
+        return;
+    }
+
+    %orig;
+}
+
+%end
+
 %hook TFNTwitterStatus
 
 - (_Bool)isCardHidden {
