@@ -255,6 +255,11 @@ function Test-WiringContract {
     Assert-Match $downloads `
         '(?s)DownloadActionItemForController.*download_videos.*entities.*mediaType' `
         "Download eligibility was not preserved as an independent helper."
+    Assert-Match $downloads '\[DownloadInlineButton\s+new\]' `
+        "The download helper does not construct its local downloader with a typed receiver."
+    Assert-NotMatch $downloads `
+        '\[objc_getClass\("DownloadInlineButton"\)\s+new\]' `
+        "The download helper uses an untyped receiver for a compile-time unavailable selector."
 
     $hookCount = ([regex]::Matches(
         $downloads, '(?m)^\s*%hook\s+UIViewController\s*$')).Count

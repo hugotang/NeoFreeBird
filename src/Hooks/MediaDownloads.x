@@ -379,7 +379,7 @@ static TFNActionItem* DownloadActionItemForController(UIViewController* controll
     DownloadInlineButton* downloader =
         objc_getAssociatedObject(controller, &downloaderKey);
     if (!downloader) {
-        downloader = [objc_getClass("DownloadInlineButton") new];
+        downloader = [DownloadInlineButton new];
         objc_setAssociatedObject(controller, &downloaderKey, downloader,
                                  OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
