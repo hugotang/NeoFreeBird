@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Mappings", "URL", "Formatter", "Provider", "All")]
+    [ValidateSet("Mappings", "URL", "Formatter", "Provider", "Wiring", "All")]
     [string]$Case = "Mappings"
 )
 
@@ -234,6 +234,33 @@ function Test-ProviderContract {
         "The provider introduced network I/O."
 }
 
+function Test-WiringContract {
+    $settings = Get-RepoText "src/Core/BHTSettings.m"
+    $downloads = Get-RepoText "src/Hooks/MediaDownloads.x"
+
+    Assert-Match $settings `
+        '(?s)tweet_to_image.*tweet_quick_actions.*@"default":\s*@YES' `
+        "tweet_quick_actions is not directly after Tweet-to-image with a YES default."
+    Assert-Match $downloads `
+        '#import\s+"TweetQuickActions/TweetQuickActionsProvider\.h"' `
+        "The action-items hook does not import the provider."
+    Assert-Match $downloads `
+        'objc_getAssociatedObject\s*\([^,]+,\s*&quickActionsProviderKey\)' `
+        "The presenting controller does not retain one provider."
+    Assert-Match $downloads `
+        '(?s)quickItem.*insertObject:quickItem.*downloadItem.*insertObject:downloadItem' `
+        "Quick Actions is not inserted before Download Media."
+    Assert-Match $downloads `
+        '(?s)DownloadActionItemForController.*download_videos.*entities.*mediaType' `
+        "Download eligibility was not preserved as an independent helper."
+
+    $hookCount = ([regex]::Matches(
+        $downloads, '(?m)^\s*%hook\s+UIViewController\s*$')).Count
+    if ($hookCount -ne 1) {
+        $failures.Add("Expected one UIViewController action-items hook, found $hookCount.")
+    }
+}
+
 switch ($Case) {
     "Mappings" {
         Test-MappingsContract
@@ -242,12 +269,14 @@ switch ($Case) {
     "URL" { Test-URLContract }
     "Formatter" { Test-FormatterContract }
     "Provider" { Test-ProviderContract }
+    "Wiring" { Test-WiringContract }
     "All" {
         Test-MappingsContract
         Test-MappingsPatternGuardrails
         Test-URLContract
         Test-FormatterContract
         Test-ProviderContract
+        Test-WiringContract
     }
 }
 

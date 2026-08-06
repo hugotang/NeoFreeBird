@@ -220,6 +220,9 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                     @{@"key": @"tweet_to_image",
                       @"default": @NO,
                       @"type": @"toggle"},
+                    @{@"key": @"tweet_quick_actions",
+                      @"default": @YES,
+                      @"type": @"toggle"},
                     @{
                         @"key": @"hide_view_count",
                         @"default": @YES,

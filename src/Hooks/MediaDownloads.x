@@ -4,6 +4,7 @@
 //
 
 #import "HookHelpers.h"
+#import "TweetQuickActions/TweetQuickActionsProvider.h"
 
 // MARK: - DM video download
 
@@ -354,6 +355,45 @@ static void InstallLegacyDMDownloadInteraction(id statusView) {
 
 // MARK: - Tweet video download
 
+static TFNActionItem* DownloadActionItemForController(UIViewController* controller,
+                                                      id status) {
+    if (![BHTSettings boolForKey:@"download_videos"] ||
+        ![status respondsToSelector:@selector(entities)]) {
+        return nil;
+    }
+
+    NSArray* mediaEntities = [[status entities] media];
+    BOOL hasVideo = NO;
+    for (TFSTwitterEntityMedia* media in mediaEntities) {
+        if ([media isKindOfClass:objc_getClass("TFSTwitterEntityMedia")] &&
+            (media.mediaType == 2 || media.mediaType == 3)) {
+            hasVideo = YES;
+            break;
+        }
+    }
+    if (!hasVideo) {
+        return nil;
+    }
+
+    static char downloaderKey;
+    DownloadInlineButton* downloader =
+        objc_getAssociatedObject(controller, &downloaderKey);
+    if (!downloader) {
+        downloader = [objc_getClass("DownloadInlineButton") new];
+        objc_setAssociatedObject(controller, &downloaderKey, downloader,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+
+    return [objc_getClass("TFNActionItem")
+        actionItemWithTitle:[[BHTBundle sharedBundle]
+                                localizedStringForKey:@"DOWNLOAD_VIDEOS_TITLE"]
+                  imageName:@"arrow_down_circle_stroke"
+                     action:^{
+                         [downloader
+                             presentDownloadOptionsForMediaEntities:mediaEntities];
+                     }];
+}
+
 // _t1_actionItemsForStatus:... is a category method on UIViewController, so the
 // hook has to land on the base class to cover every share/action sheet.
 %hook UIViewController
@@ -364,45 +404,37 @@ static void InstallLegacyDMDownloadInteraction(id statusView) {
                               source:(__unsafe_unretained id)source
                              options:(NSUInteger)options
                      scribeComponent:(__unsafe_unretained id)scribeComponent
-                           doneBlock:(__unsafe_unretained id)doneBlock {
+                            doneBlock:(__unsafe_unretained id)doneBlock {
     NSArray* origItems = %orig;
 
-    if (![BHTSettings boolForKey:@"download_videos"] ||
-        ![status respondsToSelector:@selector(entities)]) {
-        return origItems;
-    }
-
-    NSArray* mediaEntities = [[status entities] media];
-    BOOL hasVideo = NO;
-    // mediaType 2 = GIF, 3 = video
-    for (TFSTwitterEntityMedia* media in mediaEntities) {
-        if ([media isKindOfClass:%c(TFSTwitterEntityMedia)] &&
-            (media.mediaType == 2 || media.mediaType == 3)) {
-            hasVideo = YES;
-            break;
+    TFNActionItem* quickItem = nil;
+    if ([BHTSettings boolForKey:@"tweet_quick_actions"]) {
+        static char quickActionsProviderKey;
+        TweetQuickActionsProvider* provider =
+            objc_getAssociatedObject(self, &quickActionsProviderKey);
+        if (!provider) {
+            provider = [TweetQuickActionsProvider new];
+            objc_setAssociatedObject(self, &quickActionsProviderKey, provider,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         }
+        quickItem = [provider actionItemForStatus:status entityURL:entityURL];
     }
-    if (!hasVideo) {
+
+    TFNActionItem* downloadItem = DownloadActionItemForController(self, status);
+    if (!quickItem && !downloadItem) {
         return origItems;
     }
 
-    static char downloaderKey;
-    DownloadInlineButton* downloader = objc_getAssociatedObject(self, &downloaderKey);
-    if (!downloader) {
-        downloader = [%c(DownloadInlineButton) new];
-        objc_setAssociatedObject(self, &downloaderKey, downloader, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
-
-    TFNActionItem* downloadItem = [%c(TFNActionItem)
-        actionItemWithTitle:[[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_VIDEOS_TITLE"]
-                  imageName:@"arrow_down_circle_stroke"
-                     action:^{
-                         [downloader presentDownloadOptionsForMediaEntities:mediaEntities];
-                     }];
-
-    NSMutableArray* newItems = origItems ? [origItems mutableCopy] : [NSMutableArray array];
+    NSMutableArray* newItems =
+        origItems ? [origItems mutableCopy] : [NSMutableArray array];
     NSUInteger insertIndex = newItems.count > 0 ? newItems.count - 1 : 0;
-    [newItems insertObject:downloadItem atIndex:insertIndex];
+    if (quickItem) {
+        [newItems insertObject:quickItem atIndex:insertIndex];
+        insertIndex++;
+    }
+    if (downloadItem) {
+        [newItems insertObject:downloadItem atIndex:insertIndex];
+    }
     return newItems;
 }
 %end
