@@ -215,8 +215,10 @@ function Test-ProviderContract {
         "The provider does not capability-check native sheet presentation."
     Assert-Match $implementation 'UIPasteboard.*string\s*=' `
         "The provider does not write selected output to the pasteboard."
-    Assert-Match $implementation 'UIImpactFeedbackGeneratorStyleLight' `
+    Assert-Match $implementation 'UIImpactFeedbackStyleLight' `
         "Copy success does not emit the approved light haptic."
+    Assert-NotMatch $implementation 'UIImpactFeedbackGeneratorStyleLight' `
+        "The provider uses a nonexistent UIKit haptic enum."
     Assert-Match $implementation 'hideAfterDelay:' `
         "The copied HUD is not dismissed nonblockingly."
     Assert-Match $implementation `

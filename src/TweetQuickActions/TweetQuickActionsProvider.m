@@ -175,7 +175,7 @@ static Class BHTQuickMenuSheetClass(void) {
 
     UIImpactFeedbackGenerator* feedback =
         [[UIImpactFeedbackGenerator alloc]
-            initWithStyle:UIImpactFeedbackGeneratorStyleLight];
+            initWithStyle:UIImpactFeedbackStyleLight];
     [feedback prepare];
     [feedback impactOccurred];
 
