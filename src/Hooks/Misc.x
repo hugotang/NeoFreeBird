@@ -4,6 +4,7 @@
 //
 
 #import <CoreText/CoreText.h>
+#import "Core/BHTShareURL.h"
 #import "HookHelpers.h"
 
 // MARK: - Always open in Safari
@@ -168,29 +169,8 @@ static CTParagraphStyleRef CreateLTRParagraphStyle(CTParagraphStyleRef original)
 // Strips the ?s= baked into the share URL format strings; &t= is already disabled
 // at the source (rehire_share_update_url_enabled in FeatureSwitches.x).
 static NSString* CleanedShareURLString(NSString* urlString) {
-    if (urlString == nil) {
-        return urlString;
-    }
-
-    NSURLComponents* components = [NSURLComponents componentsWithString:urlString];
-    if (components == nil) {
-        return urlString;
-    }
-
-    NSMutableArray<NSURLQueryItem*>* safeParams = [NSMutableArray arrayWithCapacity:0];
-    for (NSURLQueryItem* item in components.queryItems) {
-        if (![item.name isEqualToString:@"s"] && ![item.name isEqualToString:@"t"]) {
-            [safeParams addObject:item];
-        }
-    }
-    components.queryItems = safeParams.count > 0 ? safeParams : nil;
-
     NSString* selectedHost = [[NSUserDefaults standardUserDefaults] objectForKey:@"sharing_domain"];
-    if (selectedHost.length > 0) {
-        components.host = selectedHost;
-    }
-
-    return components.URL.absoluteString ?: urlString;
+    return BHTCleanShareURLString(urlString, selectedHost, NO);
 }
 
 // Every share surface funnels into these two builders; the legacy twitterURLFor*

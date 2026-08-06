@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Mappings")]
+    [ValidateSet("Mappings", "URL", "All")]
     [string]$Case = "Mappings"
 )
 
@@ -122,8 +122,44 @@ function Test-MappingsPatternGuardrails {
         "Mapping guardrail accepted a class method with the wrong return type."
 }
 
-Test-MappingsContract
-Test-MappingsPatternGuardrails
+function Test-URLContract {
+    $header = Get-RepoText "src/Core/BHTShareURL.h"
+    $implementation = Get-RepoText "src/Core/BHTShareURL.m"
+    $misc = Get-RepoText "src/Hooks/Misc.x"
+
+    foreach ($symbol in @(
+        "BHTEffectiveSharingHost",
+        "BHTNormalizedTwitterHandle",
+        "BHTCleanShareURLString",
+        "BHTCanonicalTweetURLString",
+        "BHTTweetHandleFromURLString",
+        "BHTTweetStatusIDFromURLString"
+    )) {
+        Assert-Match ($header + $implementation) $symbol `
+            "The shared URL helper is missing $symbol."
+    }
+
+    Assert-Match $implementation `
+        '(?s)item\.name isEqualToString:@"s".*item\.name isEqualToString:@"t"' `
+        "The shared URL helper does not remove both tracking parameters."
+    Assert-Match $misc '#import\s+"Core/BHTShareURL\.h"' `
+        "Misc.x does not import the shared URL helper."
+    Assert-Match $misc 'BHTCleanShareURLString\s*\(' `
+        "Existing share hooks do not delegate to the shared URL helper."
+}
+
+switch ($Case) {
+    "Mappings" {
+        Test-MappingsContract
+        Test-MappingsPatternGuardrails
+    }
+    "URL" { Test-URLContract }
+    "All" {
+        Test-MappingsContract
+        Test-MappingsPatternGuardrails
+        Test-URLContract
+    }
+}
 
 if ($failures.Count -gt 0) {
     foreach ($failure in $failures) {
