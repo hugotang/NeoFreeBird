@@ -207,12 +207,25 @@ function Test-ProviderContract {
         "Unavailable submenu commands are not disabled."
     Assert-Match $implementation 'TFNMenuSheetViewController' `
         "The provider does not use Twitter's native second-level sheet."
+    Assert-Match $implementation `
+        'instancesRespondToSelector:@selector\(initWithTitle:actionItems:\)' `
+        "The provider does not capability-check the native sheet initializer."
+    Assert-Match $implementation `
+        '(?s)instancesRespondToSelector\s*:\s*@selector\(\s*tfnPresentedCustomPresentFromViewController\s*:\s*animated\s*:\s*completion\s*:\s*\)' `
+        "The provider does not capability-check native sheet presentation."
     Assert-Match $implementation 'UIPasteboard.*string\s*=' `
         "The provider does not write selected output to the pasteboard."
     Assert-Match $implementation 'UIImpactFeedbackGeneratorStyleLight' `
         "Copy success does not emit the approved light haptic."
     Assert-Match $implementation 'hideAfterDelay:' `
         "The copied HUD is not dismissed nonblockingly."
+    Assert-Match $implementation `
+        'instancesRespondToSelector:@selector\(initWithText:\)' `
+        "The provider does not capability-check HUD construction."
+    Assert-Match $implementation 'respondsToSelector:@selector\(show\)' `
+        "The provider does not capability-check HUD presentation."
+    Assert-Match $implementation 'respondsToSelector:@selector\(hide\)' `
+        "The provider does not capability-check the fallback HUD dismissal."
     Assert-NotMatch $implementation 'MSHookFunction|MSFindSymbol|\$s4Grok|isPremiumUser' `
         "The provider introduced a prohibited Grok/function-hook path."
     Assert-NotMatch $implementation '%ctor|\+\s*\(void\)load|__attribute__\(\(constructor\)\)' `

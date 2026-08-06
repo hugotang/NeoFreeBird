@@ -95,6 +95,21 @@ static TFNActionItem* BHTQuickActionItem(NSString* title,
     return nil;
 }
 
+static Class BHTQuickMenuSheetClass(void) {
+    Class sheetClass = objc_getClass("TFNMenuSheetViewController");
+    if (!sheetClass ||
+        ![sheetClass
+            instancesRespondToSelector:@selector(initWithTitle:actionItems:)] ||
+        ![sheetClass
+            instancesRespondToSelector:@selector(
+                                           tfnPresentedCustomPresentFromViewController:
+                                               animated:
+                                             completion:)]) {
+        return Nil;
+    }
+    return sheetClass;
+}
+
 @implementation TweetQuickActionsProvider
 
 - (BHTTweetQuickActionsContext*)contextForStatus:(id)status entityURL:(id)entityURL {
@@ -164,17 +179,26 @@ static TFNActionItem* BHTQuickActionItem(NSString* title,
     [feedback impactOccurred];
 
     Class hudClass = objc_getClass("TFNHUD");
-    if (!hudClass) {
+    if (!hudClass ||
+        ![hudClass instancesRespondToSelector:@selector(initWithText:)]) {
         return;
     }
-    self.hud = [[hudClass alloc]
+    TFNHUD* hud = [[hudClass alloc]
         initWithText:[[BHTBundle sharedBundle]
                          localizedStringForKey:@"TWEET_QUICK_ACTIONS_COPIED"]];
-    [self.hud show];
-    if ([self.hud respondsToSelector:@selector(hideAfterDelay:)]) {
-        [self.hud hideAfterDelay:0.8];
+    BOOL canHideAfterDelay =
+        [hud respondsToSelector:@selector(hideAfterDelay:)];
+    BOOL canHide = [hud respondsToSelector:@selector(hide)];
+    if (!hud || ![hud respondsToSelector:@selector(show)] ||
+        (!canHideAfterDelay && !canHide)) {
+        return;
+    }
+
+    self.hud = hud;
+    [hud show];
+    if (canHideAfterDelay) {
+        [hud hideAfterDelay:0.8];
     } else {
-        TFNHUD* hud = self.hud;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
                                      (int64_t)(0.8 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
@@ -202,7 +226,7 @@ static TFNActionItem* BHTQuickActionItem(NSString* title,
 }
 
 - (void)presentContext:(BHTTweetQuickActionsContext*)context {
-    Class sheetClass = objc_getClass("TFNMenuSheetViewController");
+    Class sheetClass = BHTQuickMenuSheetClass();
     UIViewController* presenter = topMostController();
     if (!sheetClass || !presenter) {
         return;
@@ -243,7 +267,7 @@ static TFNActionItem* BHTQuickActionItem(NSString* title,
 
 - (TFNActionItem*)actionItemForStatus:(id)status entityURL:(id)entityURL {
     if (![BHTSettings boolForKey:@"tweet_quick_actions"] ||
-        !objc_getClass("TFNMenuSheetViewController")) {
+        !BHTQuickMenuSheetClass()) {
         return nil;
     }
 
