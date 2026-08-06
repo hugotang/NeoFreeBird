@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Mappings", "URL", "Formatter", "All")]
+    [ValidateSet("Mappings", "URL", "Formatter", "Provider", "All")]
     [string]$Case = "Mappings"
 )
 
@@ -171,6 +171,56 @@ function Test-FormatterContract {
         "Markdown formatting does not distinguish text and blank quote lines."
 }
 
+function Test-ProviderContract {
+    $header = Get-RepoText "src/TweetQuickActions/TweetQuickActionsProvider.h"
+    $implementation =
+        Get-RepoText "src/TweetQuickActions/TweetQuickActionsProvider.m"
+
+    Assert-Match $header '(?s)actionItemForStatus:.*entityURL:' `
+        "The provider does not expose a focused action-item factory."
+    Assert-Match $implementation '@interface\s+BHTTweetQuickActionsContext' `
+        "The provider has no immutable snapshot type."
+    Assert-Match $implementation '(?s)@try.*@catch' `
+        "Private model reads are not bounded by an Objective-C exception guard."
+
+    Assert-Match $implementation `
+        '(?s)BHTQuickObjectGetter.*respondsToSelector:selector.*objc_msgSend' `
+        "Object-returning private getters do not share one guarded dispatch helper."
+    Assert-Match $implementation `
+        '(?s)BHTQuickIntegerGetter.*respondsToSelector:selector.*objc_msgSend' `
+        "Integer-returning private getters do not share one guarded dispatch helper."
+
+    foreach ($selector in @(
+        "plainTextSubject",
+        "shareableAuthorName",
+        "shareableAuthorHandle",
+        "twitterURLForCopy",
+        "statusID"
+    )) {
+        Assert-Match $implementation `
+            ("BHTQuick(?:Object|Integer)Getter\s*\([^;]+@selector\(" +
+             [regex]::Escape($selector) + "\)\s*\)") `
+            "The provider does not route $selector through guarded dispatch."
+    }
+
+    Assert-Match $implementation 'setDisabled:' `
+        "Unavailable submenu commands are not disabled."
+    Assert-Match $implementation 'TFNMenuSheetViewController' `
+        "The provider does not use Twitter's native second-level sheet."
+    Assert-Match $implementation 'UIPasteboard.*string\s*=' `
+        "The provider does not write selected output to the pasteboard."
+    Assert-Match $implementation 'UIImpactFeedbackGeneratorStyleLight' `
+        "Copy success does not emit the approved light haptic."
+    Assert-Match $implementation 'hideAfterDelay:' `
+        "The copied HUD is not dismissed nonblockingly."
+    Assert-NotMatch $implementation 'MSHookFunction|MSFindSymbol|\$s4Grok|isPremiumUser' `
+        "The provider introduced a prohibited Grok/function-hook path."
+    Assert-NotMatch $implementation '%ctor|\+\s*\(void\)load|__attribute__\(\(constructor\)\)' `
+        "The provider introduced startup-time execution."
+    Assert-NotMatch $implementation 'NSURLSession|NSMutableURLRequest|dataTaskWith' `
+        "The provider introduced network I/O."
+}
+
 switch ($Case) {
     "Mappings" {
         Test-MappingsContract
@@ -178,11 +228,13 @@ switch ($Case) {
     }
     "URL" { Test-URLContract }
     "Formatter" { Test-FormatterContract }
+    "Provider" { Test-ProviderContract }
     "All" {
         Test-MappingsContract
         Test-MappingsPatternGuardrails
         Test-URLContract
         Test-FormatterContract
+        Test-ProviderContract
     }
 }
 
