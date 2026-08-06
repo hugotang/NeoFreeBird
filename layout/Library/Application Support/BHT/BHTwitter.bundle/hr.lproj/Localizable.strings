@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Spremi tweet kao sliku";
 "TWEET_TO_IMAGE_DETAIL" = "Dugo pritisni 'Dijeli' za spremanje kao sliku.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Brze radnje za Tweet";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Kopirajte tekst Tweeta, čistu poveznicu, autora ili Markdown citat.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Brze radnje";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Kopiraj tekst Tweeta";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Kopiraj poveznicu Tweeta";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Kopiraj autora";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Kopiraj kao Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "Kopirano";
 
 "LIKE_CONFIRM_TITLE" = "Potvrda lajka";
 "LIKE_CONFIRM_DETAIL" = "Zatraži potvrdu prije lajkanja tweeta.";

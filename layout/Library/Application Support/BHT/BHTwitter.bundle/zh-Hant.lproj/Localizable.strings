@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "將推文存為圖片";
 "TWEET_TO_IMAGE_DETAIL" = "長按分享按鈕以圖片格式儲存推文。";
+"TWEET_QUICK_ACTIONS_TITLE" = "推文快速操作";
+"TWEET_QUICK_ACTIONS_DETAIL" = "快速複製推文內文、無追蹤參數的連結、作者資訊或 Markdown 引用。";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "快速操作";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "複製推文內文";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "複製推文連結";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "複製作者";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "複製為 Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "已複製";
 
 "LIKE_CONFIRM_TITLE" = "確認按讚";
 "LIKE_CONFIRM_DETAIL" = "按讚前顯示確認提示。";

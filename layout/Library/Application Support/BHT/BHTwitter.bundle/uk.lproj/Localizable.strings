@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Зберегти твіт як зображення";
 "TWEET_TO_IMAGE_DETAIL" = "Натисніть та утримуйте «Поділитися», щоб експортувати у вигляді картинки.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Швидкі дії з твітами";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Копіюйте текст твіту, чисте посилання, дані автора або цитату Markdown.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Швидкі дії";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Копіювати текст твіту";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Копіювати посилання на твіт";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Копіювати автора";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Копіювати як Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "Скопійовано";
 
 "LIKE_CONFIRM_TITLE" = "Підтвердження вподобань";
 "LIKE_CONFIRM_DETAIL" = "Питати перед тим, як уподобати твіт.";

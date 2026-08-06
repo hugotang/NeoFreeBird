@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "트윗을 사진으로 저장";
 "TWEET_TO_IMAGE_DETAIL" = "트윗을 사진으로 저장하려면 공유 버튼을 길게 누릅니다.";
+"TWEET_QUICK_ACTIONS_TITLE" = "트윗 빠른 작업";
+"TWEET_QUICK_ACTIONS_DETAIL" = "트윗 본문, 추적 정보가 없는 링크, 작성자 정보 또는 Markdown 인용문을 복사합니다.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "빠른 작업";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "트윗 본문 복사";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "트윗 링크 복사";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "작성자 복사";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Markdown으로 복사";
+"TWEET_QUICK_ACTIONS_COPIED" = "복사됨";
 
 "LIKE_CONFIRM_TITLE" = "'마음에 들어요' 확인 창 표시";
 "LIKE_CONFIRM_DETAIL" = "트윗에 '마음에 들어요'를 누르면, 정말 '마음에 들어요'를 할 것인지 다시 확인합니다.";

@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Mappings", "URL", "Formatter", "Provider", "Wiring", "All")]
+    [ValidateSet("Mappings", "URL", "Formatter", "Provider", "Wiring", "Localization", "All")]
     [string]$Case = "Mappings"
 )
 
@@ -261,6 +261,28 @@ function Test-WiringContract {
     }
 }
 
+function Test-LocalizationContract {
+    $keys = @(
+        "TWEET_QUICK_ACTIONS_TITLE",
+        "TWEET_QUICK_ACTIONS_DETAIL",
+        "TWEET_QUICK_ACTIONS_MENU_TITLE",
+        "TWEET_QUICK_ACTIONS_COPY_TEXT",
+        "TWEET_QUICK_ACTIONS_COPY_LINK",
+        "TWEET_QUICK_ACTIONS_COPY_AUTHOR",
+        "TWEET_QUICK_ACTIONS_COPY_MARKDOWN",
+        "TWEET_QUICK_ACTIONS_COPIED"
+    )
+    $bundle = Join-Path $repoRoot `
+        "layout\Library\Application Support\BHT\BHTwitter.bundle"
+    foreach ($file in Get-ChildItem $bundle -Recurse -Filter Localizable.strings) {
+        $text = [System.IO.File]::ReadAllText($file.FullName)
+        foreach ($key in $keys) {
+            Assert-Match $text ('"' + [regex]::Escape($key) + '"\s*=\s*".+";') `
+                "$($file.Directory.Name) is missing or has an empty $key."
+        }
+    }
+}
+
 switch ($Case) {
     "Mappings" {
         Test-MappingsContract
@@ -270,6 +292,7 @@ switch ($Case) {
     "Formatter" { Test-FormatterContract }
     "Provider" { Test-ProviderContract }
     "Wiring" { Test-WiringContract }
+    "Localization" { Test-LocalizationContract }
     "All" {
         Test-MappingsContract
         Test-MappingsPatternGuardrails
@@ -277,6 +300,7 @@ switch ($Case) {
         Test-FormatterContract
         Test-ProviderContract
         Test-WiringContract
+        Test-LocalizationContract
     }
 }
 

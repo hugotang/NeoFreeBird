@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Tweet’i görsel olarak kaydet";
 "TWEET_TO_IMAGE_DETAIL" = "Paylaş’a uzun basarak tweet’i görsel olarak dışa aktar.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Tweet hızlı işlemleri";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Tweet metnini, temiz bağlantıyı, yazarı veya Markdown alıntısını kopyalayın.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Hızlı işlemler";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Tweet metnini kopyala";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Tweet bağlantısını kopyala";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Yazarı kopyala";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Markdown olarak kopyala";
+"TWEET_QUICK_ACTIONS_COPIED" = "Kopyalandı";
 
 "LIKE_CONFIRM_TITLE" = "Beğenileri onayla";
 "LIKE_CONFIRM_DETAIL" = "Tweet’i beğenmeden önce onay iste.";

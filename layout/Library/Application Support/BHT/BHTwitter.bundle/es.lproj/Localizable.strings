@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Guardar Tweet como imagen";
 "TWEET_TO_IMAGE_DETAIL" = "Mantén pulsado compartir para exportar Tweets como imágenes.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Acciones rápidas de Tweets";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Copia el texto del Tweet, un enlace limpio, el autor o una cita en Markdown.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Acciones rápidas";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Copiar texto del Tweet";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Copiar enlace del Tweet";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Copiar autor";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Copiar como Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "Copiado";
 
 "LIKE_CONFIRM_TITLE" = "Confirmar me gusta";
 "LIKE_CONFIRM_DETAIL" = "Pide confirmación antes de dar me gusta.";

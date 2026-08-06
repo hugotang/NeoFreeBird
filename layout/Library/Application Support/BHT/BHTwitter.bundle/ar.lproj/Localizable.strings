@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "حفظ التغريدة كصورة";
 "TWEET_TO_IMAGE_DETAIL" = "اضغط مطولًا للمشاركة كصورة.";
+"TWEET_QUICK_ACTIONS_TITLE" = "إجراءات التغريدة السريعة";
+"TWEET_QUICK_ACTIONS_DETAIL" = "انسخ نص التغريدة أو رابطًا نظيفًا أو بيانات صاحب التغريدة أو اقتباسًا بصيغة Markdown.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "إجراءات سريعة";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "نسخ نص التغريدة";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "نسخ رابط التغريدة";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "نسخ صاحب التغريدة";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "نسخ بصيغة Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "تم النسخ";
 
 "LIKE_CONFIRM_TITLE" = "تأكيد الإعجابات";
 "LIKE_CONFIRM_DETAIL" = "طلب تأكيد قبل الإعجاب.";

@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Spara Tweet som bild";
 "TWEET_TO_IMAGE_DETAIL" = "Tryck länge på dela för att exportera Tweets som bilder.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Snabbåtgärder för Tweets";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Kopiera Tweet-text, en ren länk, författaren eller ett Markdown-citat.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Snabbåtgärder";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Kopiera Tweet-text";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Kopiera Tweet-länk";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Kopiera författare";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Kopiera som Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "Kopierat";
 
 "LIKE_CONFIRM_TITLE" = "Bekräfta gilla-markeringar";
 "LIKE_CONFIRM_DETAIL" = "Fråga innan du gillar en Tweet.";

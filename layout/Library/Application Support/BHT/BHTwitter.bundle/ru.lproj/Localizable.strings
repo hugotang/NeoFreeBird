@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Сохранять твит как изображение";
 "TWEET_TO_IMAGE_DETAIL" = "Удерживай кнопку «Поделиться», чтобы сохранить как картинку.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Быстрые действия с твитом";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Копируйте текст твита, чистую ссылку, данные автора или цитату в Markdown.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Быстрые действия";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Копировать текст твита";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Копировать ссылку на твит";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Копировать автора";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Копировать как Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "Скопировано";
 
 "LIKE_CONFIRM_TITLE" = "Подтверждение лайка";
 "LIKE_CONFIRM_DETAIL" = "Запрашивать подтверждение перед лайком.";

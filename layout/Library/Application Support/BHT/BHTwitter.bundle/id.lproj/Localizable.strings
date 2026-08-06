@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "Simpan Tweet sebagai gambar";
 "TWEET_TO_IMAGE_DETAIL" = "Tekan lama tombol bagikan untuk ekspor ke gambar.";
+"TWEET_QUICK_ACTIONS_TITLE" = "Tindakan cepat Tweet";
+"TWEET_QUICK_ACTIONS_DETAIL" = "Salin teks Tweet, tautan bersih, penulis, atau kutipan Markdown.";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "Tindakan cepat";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "Salin teks Tweet";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "Salin tautan Tweet";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "Salin penulis";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Salin sebagai Markdown";
+"TWEET_QUICK_ACTIONS_COPIED" = "Disalin";
 
 "LIKE_CONFIRM_TITLE" = "Konfirmasi suka";
 "LIKE_CONFIRM_DETAIL" = "Tanya dulu sebelum menyukai Tweet.";

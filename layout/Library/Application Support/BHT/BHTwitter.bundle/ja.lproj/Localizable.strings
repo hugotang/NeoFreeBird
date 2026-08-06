@@ -76,6 +76,14 @@
 /*Tweets*/
 "TWEET_TO_IMAGE_TITLE" = "ツイートを画像として保存";
 "TWEET_TO_IMAGE_DETAIL" = "[共有] を長押しすると、ツイートを画像としてエクスポートできます。";
+"TWEET_QUICK_ACTIONS_TITLE" = "ツイートのクイックアクション";
+"TWEET_QUICK_ACTIONS_DETAIL" = "ツイート本文、追跡情報のないリンク、投稿者情報、Markdown形式の引用をすばやくコピーします。";
+"TWEET_QUICK_ACTIONS_MENU_TITLE" = "クイックアクション";
+"TWEET_QUICK_ACTIONS_COPY_TEXT" = "ツイート本文をコピー";
+"TWEET_QUICK_ACTIONS_COPY_LINK" = "ツイートのリンクをコピー";
+"TWEET_QUICK_ACTIONS_COPY_AUTHOR" = "投稿者をコピー";
+"TWEET_QUICK_ACTIONS_COPY_MARKDOWN" = "Markdown形式でコピー";
+"TWEET_QUICK_ACTIONS_COPIED" = "コピーしました";
 
 "LIKE_CONFIRM_TITLE" = "いいねの確認";
 "LIKE_CONFIRM_DETAIL" = "ツイートに「いいね」する前に確認ダイアログを表示します。";
