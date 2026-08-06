@@ -45,10 +45,10 @@ static void TestURLs(void) {
 
 static void TestFormatting(void) {
     AssertEqual([BHTTweetQuickActionsFormatter normalizedTextFromValue:
-                     @"  First line\n\nSecond line  "],
+                                                   @"  First line\n\nSecond line  "],
                 @"First line\n\nSecond line", @"trim and preserve lines");
     AssertEqual([BHTTweetQuickActionsFormatter normalizedTextFromValue:
-                     [[NSAttributedString alloc] initWithString:@"Attributed"]],
+                                                   [[NSAttributedString alloc] initWithString:@"Attributed"]],
                 @"Attributed", @"attributed text");
     AssertEqual([BHTTweetQuickActionsFormatter authorWithName:@"Alice"
                                                        handle:@"@alice"],
@@ -60,23 +60,23 @@ static void TestFormatting(void) {
                                                        handle:nil],
                 @"Alice", @"name-only author");
     AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:
-                     @"First line\n\nSecond line"
-                                                              author:@"Alice (@alice)"
-                                                           URLString:@"https://x.com/alice/status/123"],
+                                                   @"First line\n\nSecond line"
+                                                         author:@"Alice (@alice)"
+                                                      URLString:@"https://x.com/alice/status/123"],
                 @"> First line\n>\n> Second line\n\n— [Alice (@alice)](https://x.com/alice/status/123)",
                 @"multiline Markdown");
     AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:nil
-                                                              author:@"Alice [A]"
-                                                           URLString:@"https://x.com/alice/status/123"],
+                                                         author:@"Alice [A]"
+                                                      URLString:@"https://x.com/alice/status/123"],
                 @"— [Alice \\[A\\]](https://x.com/alice/status/123)",
                 @"media-only Markdown and escaped label");
     AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:@"Body"
-                                                              author:nil
-                                                           URLString:@"https://x.com/a/status/1"],
+                                                         author:nil
+                                                      URLString:@"https://x.com/a/status/1"],
                 @"> Body\n\n— https://x.com/a/status/1", @"URL-only attribution");
     AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:@"Body"
-                                                              author:nil
-                                                           URLString:nil],
+                                                         author:nil
+                                                      URLString:nil],
                 @"> Body", @"body-only Markdown");
 }
 

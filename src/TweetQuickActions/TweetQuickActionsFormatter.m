@@ -29,7 +29,7 @@
 
 + (NSString*)escapedMarkdownLabel:(NSString*)label {
     NSString* escaped = [label stringByReplacingOccurrencesOfString:@"\\"
-                                                          withString:@"\\\\"];
+                                                         withString:@"\\\\"];
     escaped = [escaped stringByReplacingOccurrencesOfString:@"["
                                                  withString:@"\\["];
     return [escaped stringByReplacingOccurrencesOfString:@"]"
@@ -37,8 +37,8 @@
 }
 
 + (NSString*)markdownWithText:(NSString*)text
-                        author:(NSString*)author
-                     URLString:(NSString*)URLString {
+                       author:(NSString*)author
+                    URLString:(NSString*)URLString {
     NSString* body = [self normalizedTextFromValue:text];
     NSString* label = [self normalizedTextFromValue:author];
     NSString* link = [self normalizedTextFromValue:URLString];

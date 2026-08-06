@@ -72,6 +72,9 @@ jobs:
           ref: ${{ github.event.inputs.commit_id || github.ref }}
           submodules: recursive
 
+      - name: Test Tweet Quick Actions Foundation Helpers
+        run: bash main/tests/quick-actions/run-foundation-tests.sh
+
       - name: Install Dependencies
         run: brew install make dpkg ldid
 

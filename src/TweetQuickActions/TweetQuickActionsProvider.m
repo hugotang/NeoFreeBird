@@ -1,7 +1,7 @@
 #import "TweetQuickActionsProvider.h"
-#import "TweetQuickActionsFormatter.h"
 #import "Core/BHTShareURL.h"
 #import "Hooks/HookHelpers.h"
+#import "TweetQuickActionsFormatter.h"
 
 @interface BHTTweetQuickActionsContext : NSObject
 @property (nonatomic, copy, readonly) NSString* text;
@@ -12,22 +12,22 @@
 @property (nonatomic, copy, readonly) NSString* URLString;
 @property (nonatomic, copy, readonly) NSString* markdown;
 - (instancetype)initWithText:(NSString*)text
-                  displayName:(NSString*)displayName
-                       handle:(NSString*)handle
-                     statusID:(long long)statusID
-                       author:(NSString*)author
-                    URLString:(NSString*)URLString
-                     markdown:(NSString*)markdown;
+                 displayName:(NSString*)displayName
+                      handle:(NSString*)handle
+                    statusID:(long long)statusID
+                      author:(NSString*)author
+                   URLString:(NSString*)URLString
+                    markdown:(NSString*)markdown;
 @end
 
 @implementation BHTTweetQuickActionsContext
 - (instancetype)initWithText:(NSString*)text
-                  displayName:(NSString*)displayName
-                       handle:(NSString*)handle
-                     statusID:(long long)statusID
-                       author:(NSString*)author
-                    URLString:(NSString*)URLString
-                     markdown:(NSString*)markdown {
+                 displayName:(NSString*)displayName
+                      handle:(NSString*)handle
+                    statusID:(long long)statusID
+                      author:(NSString*)author
+                   URLString:(NSString*)URLString
+                    markdown:(NSString*)markdown {
     self = [super init];
     if (self) {
         _text = [text copy];
@@ -50,7 +50,7 @@ static id BHTQuickObjectGetter(id object, SEL selector) {
     if (!object || ![object respondsToSelector:selector]) {
         return nil;
     }
-    return ((id (*)(id, SEL))objc_msgSend)(object, selector);
+    return ((id(*)(id, SEL))objc_msgSend)(object, selector);
 }
 
 static long long BHTQuickIntegerGetter(id object, SEL selector) {
@@ -79,8 +79,8 @@ static BOOL BHTQuickIconExists(NSString* imageName) {
 }
 
 static TFNActionItem* BHTQuickActionItem(NSString* title,
-                                        NSString* imageName,
-                                        void (^action)(void)) {
+                                         NSString* imageName,
+                                         void (^action)(void)) {
     Class itemClass = objc_getClass("TFNActionItem");
     if (!itemClass || !title.length || !action) {
         return nil;
@@ -103,8 +103,8 @@ static Class BHTQuickMenuSheetClass(void) {
         ![sheetClass
             instancesRespondToSelector:@selector(
                                            tfnPresentedCustomPresentFromViewController:
-                                               animated:
-                                             completion:)]) {
+                                                                              animated:
+                                                                              completion:)]) {
         return Nil;
     }
     return sheetClass;
@@ -145,7 +145,8 @@ static Class BHTQuickMenuSheetClass(void) {
         }
 
         NSString* author =
-            [BHTTweetQuickActionsFormatter authorWithName:displayName handle:handle];
+            [BHTTweetQuickActionsFormatter authorWithName:displayName
+                                                   handle:handle];
         NSString* markdown =
             [BHTTweetQuickActionsFormatter markdownWithText:text
                                                      author:author
@@ -208,8 +209,8 @@ static Class BHTQuickMenuSheetClass(void) {
 }
 
 - (TFNActionItem*)copyItemWithTitleKey:(NSString*)titleKey
-                              imageName:(NSString*)imageName
-                                   value:(NSString*)value {
+                             imageName:(NSString*)imageName
+                                 value:(NSString*)value {
     __weak TweetQuickActionsProvider* weakSelf = self;
     TFNActionItem* item = BHTQuickActionItem(
         [[BHTBundle sharedBundle] localizedStringForKey:titleKey], imageName, ^{
@@ -236,16 +237,20 @@ static Class BHTQuickMenuSheetClass(void) {
     NSArray* candidates = @[
         [self copyItemWithTitleKey:@"TWEET_QUICK_ACTIONS_COPY_TEXT"
                          imageName:@"news_stroke"
-                              value:context.text] ?: NSNull.null,
+                             value:context.text]
+            ?: NSNull.null,
         [self copyItemWithTitleKey:@"TWEET_QUICK_ACTIONS_COPY_LINK"
                          imageName:@"link"
-                              value:context.URLString] ?: NSNull.null,
+                             value:context.URLString]
+            ?: NSNull.null,
         [self copyItemWithTitleKey:@"TWEET_QUICK_ACTIONS_COPY_AUTHOR"
                          imageName:@"account"
-                              value:context.author] ?: NSNull.null,
+                             value:context.author]
+            ?: NSNull.null,
         [self copyItemWithTitleKey:@"TWEET_QUICK_ACTIONS_COPY_MARKDOWN"
                          imageName:@"copy_stroke"
-                              value:context.markdown] ?: NSNull.null,
+                             value:context.markdown]
+            ?: NSNull.null,
     ];
     for (id candidate in candidates) {
         if (candidate != NSNull.null) {
@@ -261,8 +266,8 @@ static Class BHTQuickMenuSheetClass(void) {
                           localizedStringForKey:@"TWEET_QUICK_ACTIONS_MENU_TITLE"]
           actionItems:items.copy];
     [sheet tfnPresentedCustomPresentFromViewController:presenter
-                                               animated:YES
-                                             completion:nil];
+                                              animated:YES
+                                            completion:nil];
 }
 
 - (TFNActionItem*)actionItemForStatus:(id)status entityURL:(id)entityURL {
@@ -272,7 +277,8 @@ static Class BHTQuickMenuSheetClass(void) {
     }
 
     BHTTweetQuickActionsContext* context =
-        [self contextForStatus:status entityURL:entityURL];
+        [self contextForStatus:status
+                     entityURL:entityURL];
     if (!context) {
         return nil;
     }

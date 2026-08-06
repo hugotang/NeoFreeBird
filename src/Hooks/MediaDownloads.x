@@ -84,7 +84,7 @@ static id LegacyDMObjectForSelector(id object, SEL selector) {
         return nil;
     }
 
-    return ((id (*)(id, SEL))objc_msgSend)(object, selector);
+    return ((id(*)(id, SEL))objc_msgSend)(object, selector);
 }
 
 static UIView* LegacyDMVisibleMediaView(id statusView) {
@@ -160,8 +160,8 @@ static void InstallLegacyDMDownloadInteraction(id statusView) {
 %hook T1DirectMessageConversationStatusView
 
 - (void)setViewModel:(id)viewModel
-              options:(NSUInteger)options
-              account:(id)account {
+             options:(NSUInteger)options
+             account:(id)account {
     %orig;
     InstallLegacyDMDownloadInteraction(self);
 }
@@ -186,7 +186,7 @@ static void InstallLegacyDMDownloadInteraction(id statusView) {
                                      localizedTwitterStringForKey:
                                          @"DOWNLOAD_ACTIVITY_VIEW_LABEL"]
                                        image:[UIImage systemImageNamed:
-                                                 @"square.and.arrow.down"]
+                                                          @"square.and.arrow.down"]
                                   identifier:nil
                                      handler:^(__kindof UIAction* _Nonnull action) {
                                          id statusView = weakStatusView;
@@ -211,10 +211,10 @@ static void InstallLegacyDMDownloadInteraction(id statusView) {
 
                                          [downloader
                                              presentDownloadOptionsForMediaEntities:
-                                                 @[ media ]];
+                                                 @[media]];
                                      }];
                          return [UIMenu menuWithTitle:@""
-                                             children:@[ saveAction ]];
+                                             children:@[saveAction]];
                      }];
 }
 
@@ -404,7 +404,7 @@ static TFNActionItem* DownloadActionItemForController(UIViewController* controll
                               source:(__unsafe_unretained id)source
                              options:(NSUInteger)options
                      scribeComponent:(__unsafe_unretained id)scribeComponent
-                            doneBlock:(__unsafe_unretained id)doneBlock {
+                           doneBlock:(__unsafe_unretained id)doneBlock {
     NSArray* origItems = %orig;
 
     TFNActionItem* quickItem = nil;
