@@ -46,6 +46,7 @@
                            subtitle:(NSString*)arg2
                           imageName:(NSString*)arg3
                              action:(void (^)(void))arg4;
+@property (nonatomic, assign, getter=isDisabled) BOOL disabled;
 @end
 
 @interface TFNAttributedTextModel : NSObject
@@ -84,6 +85,7 @@
 - (void)setText:(NSString*)text;
 - (void)show;
 - (void)hide;
+- (void)hideAfterDelay:(NSTimeInterval)delay;
 @end
 
 @interface TFNSettingsNavigationItem : NSObject
@@ -111,6 +113,10 @@
 @property (nonatomic, copy) NSString* fromUserName;
 @property (nonatomic, assign) NSInteger statusID;
 - (id)init;
+- (NSString*)plainTextSubject;
+- (NSString*)shareableAuthorName;
+- (NSString*)shareableAuthorHandle;
+- (NSString*)twitterURLForCopy;
 @end
 
 @interface TFNTwitter : NSObject
