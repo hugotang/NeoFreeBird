@@ -259,3 +259,4 @@ packages/
 !packages/PUT_IPA_HERE
 
 deps/*/build/
+.worktrees/
