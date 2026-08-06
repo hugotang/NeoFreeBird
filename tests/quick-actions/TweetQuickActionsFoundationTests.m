@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import "Core/BHTShareURL.h"
+#import "TweetQuickActions/TweetQuickActionsFormatter.h"
 
 static NSUInteger assertions = 0;
 static NSUInteger failures = 0;
@@ -42,9 +43,47 @@ static void TestURLs(void) {
                 @"reject invalid Tweet URL ID");
 }
 
+static void TestFormatting(void) {
+    AssertEqual([BHTTweetQuickActionsFormatter normalizedTextFromValue:
+                     @"  First line\n\nSecond line  "],
+                @"First line\n\nSecond line", @"trim and preserve lines");
+    AssertEqual([BHTTweetQuickActionsFormatter normalizedTextFromValue:
+                     [[NSAttributedString alloc] initWithString:@"Attributed"]],
+                @"Attributed", @"attributed text");
+    AssertEqual([BHTTweetQuickActionsFormatter authorWithName:@"Alice"
+                                                       handle:@"@alice"],
+                @"Alice (@alice)", @"full author");
+    AssertEqual([BHTTweetQuickActionsFormatter authorWithName:nil
+                                                       handle:@"alice"],
+                @"@alice", @"handle-only author");
+    AssertEqual([BHTTweetQuickActionsFormatter authorWithName:@"Alice"
+                                                       handle:nil],
+                @"Alice", @"name-only author");
+    AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:
+                     @"First line\n\nSecond line"
+                                                              author:@"Alice (@alice)"
+                                                           URLString:@"https://x.com/alice/status/123"],
+                @"> First line\n>\n> Second line\n\n— [Alice (@alice)](https://x.com/alice/status/123)",
+                @"multiline Markdown");
+    AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:nil
+                                                              author:@"Alice [A]"
+                                                           URLString:@"https://x.com/alice/status/123"],
+                @"— [Alice \\[A\\]](https://x.com/alice/status/123)",
+                @"media-only Markdown and escaped label");
+    AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:@"Body"
+                                                              author:nil
+                                                           URLString:@"https://x.com/a/status/1"],
+                @"> Body\n\n— https://x.com/a/status/1", @"URL-only attribution");
+    AssertEqual([BHTTweetQuickActionsFormatter markdownWithText:@"Body"
+                                                              author:nil
+                                                           URLString:nil],
+                @"> Body", @"body-only Markdown");
+}
+
 int main(void) {
     @autoreleasepool {
         TestURLs();
+        TestFormatting();
         if (failures > 0) {
             NSLog(@"Tweet Quick Actions Foundation tests failed: %lu/%lu",
                   (unsigned long)failures, (unsigned long)assertions);

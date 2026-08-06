@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Mappings", "URL", "All")]
+    [ValidateSet("Mappings", "URL", "Formatter", "All")]
     [string]$Case = "Mappings"
 )
 
@@ -148,16 +148,41 @@ function Test-URLContract {
         "Existing share hooks do not delegate to the shared URL helper."
 }
 
+function Test-FormatterContract {
+    $header = Get-RepoText "src/TweetQuickActions/TweetQuickActionsFormatter.h"
+    $implementation =
+        Get-RepoText "src/TweetQuickActions/TweetQuickActionsFormatter.m"
+
+    $selectorPatterns = [ordered]@{
+        "normalizedTextFromValue:" =
+            'normalizedTextFromValue\s*:\s*\([^)]*\)\s*[A-Za-z_][A-Za-z0-9_]*'
+        "authorWithName:handle:" =
+            '(?s)authorWithName\s*:\s*\([^)]*\)\s*[A-Za-z_][A-Za-z0-9_]*\s+handle\s*:'
+        "markdownWithText:author:URLString:" =
+            '(?s)markdownWithText\s*:\s*\([^)]*\)\s*[A-Za-z_][A-Za-z0-9_]*\s+author\s*:\s*\([^)]*\)\s*[A-Za-z_][A-Za-z0-9_]*\s+URLString\s*:'
+    }
+    foreach ($selector in $selectorPatterns.Keys) {
+        Assert-Match ($header + $implementation) $selectorPatterns[$selector] `
+            "The formatter is missing $selector."
+    }
+    Assert-Match $implementation 'componentsSeparatedByString:@"\\n"' `
+        "Markdown formatting does not process each line independently."
+    Assert-Match $implementation '(?s)@"> %@".*@">"' `
+        "Markdown formatting does not distinguish text and blank quote lines."
+}
+
 switch ($Case) {
     "Mappings" {
         Test-MappingsContract
         Test-MappingsPatternGuardrails
     }
     "URL" { Test-URLContract }
+    "Formatter" { Test-FormatterContract }
     "All" {
         Test-MappingsContract
         Test-MappingsPatternGuardrails
         Test-URLContract
+        Test-FormatterContract
     }
 }
 

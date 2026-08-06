@@ -14,6 +14,7 @@ xcrun clang -fobjc-arc -fmodules -framework Foundation \
   -I"$root/src" \
   "$root/tests/quick-actions/TweetQuickActionsFoundationTests.m" \
   "$root/src/Core/BHTShareURL.m" \
+  "$root/src/TweetQuickActions/TweetQuickActionsFormatter.m" \
   -o "$tmp/tweet-quick-actions-foundation-tests"
 
 "$tmp/tweet-quick-actions-foundation-tests"
