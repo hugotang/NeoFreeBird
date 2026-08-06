@@ -8,6 +8,16 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $failures = [System.Collections.Generic.List[string]]::new()
+$mappingPatterns = @{
+    ActionItem = '(?m)^[ \t]*@property[ \t]*\([ \t]*nonatomic[ \t]*,[ \t]*assign[ \t]*,[ \t]*getter[ \t]*=[ \t]*isDisabled[ \t]*\)[ \t]*BOOL[ \t]+disabled[ \t]*;[ \t]*$'
+    HUD = '(?m)^[ \t]*-[ \t]*\([ \t]*void[ \t]*\)[ \t]*hideAfterDelay[ \t]*:[ \t]*\([ \t]*NSTimeInterval[ \t]*\)[ \t]*[A-Za-z_][A-Za-z0-9_]*[ \t]*;[ \t]*$'
+    Status = [ordered]@{
+        plainTextSubject = '(?m)^[ \t]*-[ \t]*\([ \t]*NSString[ \t]*\*[ \t]*\)[ \t]*plainTextSubject[ \t]*;[ \t]*$'
+        shareableAuthorName = '(?m)^[ \t]*-[ \t]*\([ \t]*NSString[ \t]*\*[ \t]*\)[ \t]*shareableAuthorName[ \t]*;[ \t]*$'
+        shareableAuthorHandle = '(?m)^[ \t]*-[ \t]*\([ \t]*NSString[ \t]*\*[ \t]*\)[ \t]*shareableAuthorHandle[ \t]*;[ \t]*$'
+        twitterURLForCopy = '(?m)^[ \t]*-[ \t]*\([ \t]*NSString[ \t]*\*[ \t]*\)[ \t]*twitterURLForCopy[ \t]*;[ \t]*$'
+    }
+}
 
 function Get-RepoText {
     param([string]$RelativePath)
@@ -22,37 +32,98 @@ function Get-RepoText {
 
 function Assert-Match {
     param([string]$Text, [string]$Pattern, [string]$Message)
-    if ($Text -notmatch $Pattern) { $failures.Add($Message) }
+    if (-not [regex]::IsMatch(
+            $Text, $Pattern,
+            [Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
+        $failures.Add($Message)
+    }
 }
 
 function Assert-NotMatch {
     param([string]$Text, [string]$Pattern, [string]$Message)
-    if ($Text -match $Pattern) { $failures.Add($Message) }
+    if ([regex]::IsMatch(
+            $Text, $Pattern,
+            [Text.RegularExpressions.RegexOptions]::CultureInvariant)) {
+        $failures.Add($Message)
+    }
+}
+
+function Get-ObjectiveCInterfaceBlock {
+    param([string]$Text, [string]$InterfaceName)
+
+    $escapedName = [regex]::Escape($InterfaceName)
+    $pattern = "(?ms)^[ \t]*@interface[ \t]+$escapedName(?=[ \t:(]|\r?$)(?:[ \t]*:[^\r\n]+)?[^\r\n]*\r?\n.*?^[ \t]*@end\b"
+    return [regex]::Match($Text, $pattern).Value
 }
 
 function Test-MappingsContract {
     $headers = Get-RepoText "src/Headers/TFNHeaders.h"
+    $actionItem = Get-ObjectiveCInterfaceBlock $headers "TFNActionItem"
+    $hud = Get-ObjectiveCInterfaceBlock $headers "TFNHUD"
+    $status = Get-ObjectiveCInterfaceBlock $headers "TFNTwitterStatus"
 
-    foreach ($selector in @(
-        "plainTextSubject",
-        "shareableAuthorName",
-        "shareableAuthorHandle",
-        "twitterURLForCopy"
-    )) {
-        Assert-Match $headers $selector `
+    foreach ($selector in $mappingPatterns.Status.Keys) {
+        Assert-Match $status $mappingPatterns.Status[$selector] `
             "TFNTwitterStatus is missing the verified $selector declaration."
     }
 
-    Assert-Match $headers `
-        '@property\s*\([^)]*getter=isDisabled[^)]*\)\s*BOOL\s+disabled' `
+    Assert-Match $actionItem $mappingPatterns.ActionItem `
         "TFNActionItem does not expose the verified disabled setter."
-    Assert-Match $headers 'hideAfterDelay:\(NSTimeInterval\)' `
+    Assert-Match $hud $mappingPatterns.HUD `
         "TFNHUD does not expose the verified delayed-hide selector."
     Assert-NotMatch $headers 'isPremiumUser|\$s4Grok|MSHookFunction|MSFindSymbol' `
         "Grok Premium or function-hook declarations entered the Quick Actions mapping surface."
 }
 
+function Test-MappingsPatternGuardrails {
+    $invalidHeaders = @'
+@interface TFNActionItemLookalike : NSObject
+@property (nonatomic, assign, getter=isDisabled) BOOL disabled;
+@end
+
+@interface TFNHUDLookalike : NSObject
+- (void)hideAfterDelay:(NSTimeInterval)delay;
+@end
+
+@interface TFNTwitterStatusLookalike : NSObject
+- (NSString*)plainTextSubject;
+- (NSString*)shareableAuthorName;
+- (NSString*)shareableAuthorHandle;
+- (NSString*)twitterURLForCopy;
+@end
+
+@interface TFNActionItem : NSObject
+@property (nonatomic, readonly, getter=isDisabled) BOOL disabled;
+@end
+
+@interface TFNHUD : NSObject
++ (int)hideAfterDelay:(NSTimeInterval)delay;
+@end
+
+@interface TFNTwitterStatus : NSObject
+// - (NSString*)plainTextSubject;
+- (NSString*)PlainTextSubject;
+- (id)shareableAuthorName;
+- (NSString*)shareableAuthorHandle:(id)value;
+- (NSString*)twitterURLForCopy { return nil; }
+@end
+'@
+    $actionItem = Get-ObjectiveCInterfaceBlock $invalidHeaders "TFNActionItem"
+    $hud = Get-ObjectiveCInterfaceBlock $invalidHeaders "TFNHUD"
+    $status = Get-ObjectiveCInterfaceBlock $invalidHeaders "TFNTwitterStatus"
+
+    foreach ($selector in $mappingPatterns.Status.Keys) {
+        Assert-NotMatch $status $mappingPatterns.Status[$selector] `
+            "Mapping guardrail accepted an invalid $selector declaration."
+    }
+    Assert-NotMatch $actionItem $mappingPatterns.ActionItem `
+        "Mapping guardrail accepted a readonly disabled property."
+    Assert-NotMatch $hud $mappingPatterns.HUD `
+        "Mapping guardrail accepted a class method with the wrong return type."
+}
+
 Test-MappingsContract
+Test-MappingsPatternGuardrails
 
 if ($failures.Count -gt 0) {
     foreach ($failure in $failures) {
