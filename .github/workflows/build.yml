@@ -193,6 +193,7 @@ jobs:
           name: ${{ steps.tweak_info.outputs.name }}_${{ steps.tweak_info.outputs.version }}
           path: ${{ github.workspace }}/main/packages/${{ steps.package_name.outputs.package }}
           archive: false
+          retention-days: 1
           if-no-files-found: error
 
       - name: Create Draft Release
