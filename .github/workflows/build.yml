@@ -149,6 +149,7 @@ jobs:
         with:
           name: BHTwitter_${{ env.BHTWITTER_VERSION }}
           path: ${{ github.workspace }}/main/packages/${{ steps.package_name.outputs.package }}
+          retention-days: 1
           if-no-files-found: error
 
       - name: Create Draft Release
