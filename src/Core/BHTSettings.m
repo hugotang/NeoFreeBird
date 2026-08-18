@@ -298,15 +298,6 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                     }
                 ]
             },
-            @"experimental": @{
-                @"titleKey": @"MODERN_SETTINGS_EXPERIMENTAL_TITLE",
-                @"subtitleKey": @"MODERN_SETTINGS_EXPERIMENTAL_SUBTITLE",
-                @"settings": @[
-                    @{@"key": @"reply_in_webview",
-                      @"default": @NO,
-                      @"type": @"toggle"}
-                ]
-            },
             @"web": @{
                 @"titleKey": @"MODERN_SETTINGS_WEB_TITLE",
                 @"subtitleKey": @"MODERN_SETTINGS_WEB_SUBTITLE",

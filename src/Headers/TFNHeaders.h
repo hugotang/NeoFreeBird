@@ -14,6 +14,25 @@
 @property (nonatomic, strong) NSString* displayUsername;
 @property (nonatomic, strong) NSString* fullName;
 @property (nonatomic, strong) id scribe;
+
++ (NSString*)knownDeviceToken;
++ (void)setKnownDeviceToken:(NSString*)token;
+
+- (instancetype)initWithUsername:(NSString*)username userID:(long long)userID;
+- (void)updateUserInfoAndCredentialsWithToken:(NSString*)token
+                                       secret:(NSString*)secret
+                                     username:(NSString*)username;
+- (void)saveOAuthCredentialWithCompletionBlock:(void (^)(void))completion;
+
+// A GET's parameters belong in the dictionary: they are signed, then appended
+// as the query. One already written on the URL does not survive it.
+- (NSMutableURLRequest*)authenticatedMutableURLRequestForURLRequest:(NSURLRequest*)request
+                                                         parameters:(NSDictionary*)parameters
+                                                              error:(NSError**)error;
+
+@property (nonatomic, readonly) NSString* accountID;
+@property (nonatomic, readonly) long long userID;
+@property (nonatomic, readonly, getter=isOwner) BOOL owner;
 @end
 
 @interface TFNTableView : UITableView
@@ -83,6 +102,8 @@
 - (instancetype)initWithText:(NSString*)text;
 - (void)setText:(NSString*)text;
 - (void)show;
+- (void)showAndBlockUserInteraction;
+- (void)setSuccessTextAndHideAfterDelay:(NSString*)text;
 - (void)hide;
 @end
 
@@ -113,9 +134,21 @@
 - (id)init;
 @end
 
+@protocol TFNTwitterOnboardingFeature <NSObject>
+- (NSArray*)legacyHeaderDataItemsForTitle:(NSString*)title subtitle:(NSString*)subtitle;
+@end
+
+@interface TFSAccountService : NSObject
+@property (nonatomic, readonly) NSArray<TFNTwitterAccount*>* accounts;
+- (void)addAccount:(TFNTwitterAccount*)account;
+@end
+
 @interface TFNTwitter : NSObject
 + (instancetype)sharedTwitter;
 @property (readonly, nonatomic) NSArray* accounts;
+@property (nonatomic, readonly) TFSAccountService* accountService;
+// nil when the app was built without the onboarding feature.
+@property (nonatomic, readonly) id<TFNTwitterOnboardingFeature> onboardingFeature;
 @end
 
 @interface TFNTwitterComposition : NSObject

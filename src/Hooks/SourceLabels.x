@@ -9,7 +9,7 @@
 //
 // The source is gone from the on-device status models, so it's fetched from
 // x.com's web GraphQL TweetDetail endpoint (reusing the web session that
-// WebCreateTweet.x establishes), cached by tweet ID, and appended to the detail
+// WebPosting.x establishes), cached by tweet ID, and appended to the detail
 // footer item's time string. Original idea by @nyaathea.
 
 // Source labels keyed by tweet ID (declared in BHTHookHelpers.h).
@@ -213,10 +213,10 @@ static NSString* encodedQueryParameter(id object) {
     if (existing.length > 0 && ![existing isEqualToString:[self unavailableString]]) return;
 
     NSDictionary* credentials = currentWebCredentials();
-    NSString* authToken = credentials[@"auth_token"];
-    NSString* ct0 = credentials[@"ct0"];
-    if (authToken.length == 0 || ct0.length == 0) {
-        // The web session may not be harvested yet on a cold start; retry rather than
+    NSString* cookie = credentials[@"cookie"];
+    NSString* csrf = credentials[@"csrf"];
+    if (cookie.length == 0 || csrf.length == 0) {
+        // The web session may not be minted yet on a cold start; retry rather than
         // giving up, so it recovers once the prewarmed session lands.
         [self retryOrFailTweetID:tweetID];
         return;
@@ -238,9 +238,8 @@ static NSString* encodedQueryParameter(id object) {
     [request setValue:@"OAuth2Session" forHTTPHeaderField:@"x-twitter-auth-type"];
     [request setValue:@"yes" forHTTPHeaderField:@"x-twitter-active-user"];
     [request setValue:@"en" forHTTPHeaderField:@"x-twitter-client-language"];
-    [request setValue:ct0 forHTTPHeaderField:@"x-csrf-token"];
-    [request setValue:[NSString stringWithFormat:@"auth_token=%@; ct0=%@", authToken, ct0]
-        forHTTPHeaderField:@"Cookie"];
+    [request setValue:csrf forHTTPHeaderField:@"x-csrf-token"];
+    [request setValue:cookie forHTTPHeaderField:@"Cookie"];
 
     NSURLSessionDataTask* task = [[NSURLSession sharedSession]
         dataTaskWithRequest:request

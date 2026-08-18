@@ -22,7 +22,6 @@
 #import "CustomTabBar/CustomTabBarUtility.h"
 #import "Download/DownloadInlineButton.h"
 #import "Headers/TWHeaders.h"
-#import "LegacyLogin/LegacyLoginViewController.h"
 #import "Padlock/AuthViewController.h"
 #import "Settings/ModernSettingsViewController.h"
 #import "ThemeColor/Palette.h"
@@ -55,11 +54,10 @@ BOOL panelIsGenuinelyAvailable(long long panelID);
 // Restored tweet source labels, keyed by tweet ID (SourceLabels.x)
 extern NSMutableDictionary* tweetSources;
 
-// Web session cookie harvesting (WebCreateTweet.x)
+// Web session warming (WebPosting.x)
 void prewarmWebCookiesIfNeeded(void);
-void maybeHandleHarvestWebView(__unsafe_unretained id webViewController);
 id accountForAuthenticatedWebView(void);
 
-// Current web-session credentials (auth_token + ct0) for read-only web GraphQL
-// requests such as restoring tweet source labels (WebCreateTweet.x)
+// Current web-session credentials (cookie header + csrf token) for read-only web
+// GraphQL requests such as restoring tweet source labels (WebPosting.x)
 NSDictionary* currentWebCredentials(void);
