@@ -51,6 +51,19 @@
 @property (copy, nonatomic) NSArray* sections;
 @end
 
+@interface TFNGenericItem : NSObject
+@property (nonatomic, copy) UITableViewCell* (^cellForRowAtIndexPathBlock)
+    (TFNGenericItem* item, TFNItemsDataViewController* controller, UITableView* tableView,
+     NSIndexPath* indexPath);
+@property (nonatomic, copy) CGFloat (^heightForRowAtIndexPathBlock)
+    (TFNGenericItem* item, TFNItemsDataViewController* controller, UITableView* tableView,
+     NSIndexPath* indexPath);
+@property (nonatomic, copy) void (^didSelectRowAtIndexPathBlock)
+    (TFNGenericItem* item, TFNItemsDataViewController* controller, UITableView* tableView,
+     NSIndexPath* indexPath);
+@property (nonatomic, strong) id userInfo;
+@end
+
 @interface TFNNavigationController : UINavigationController
 @end
 
