@@ -5,17 +5,11 @@
 //  Created by nyaathea
 //
 
-#import <UIKit/UIKit.h>
+#import "Headers/TFNHeaders.h"
 
-@class TFNTwitterAccount;
-
-@interface ModernSettingsPageViewController
-    : UIViewController <UITableViewDataSource, UITableViewDelegate>
+@interface ModernSettingsPageViewController : TFNItemsDataViewController
 
 @property (nonatomic, strong) TFNTwitterAccount* account;
-@property (nonatomic, strong) UITableView* tableView;
-@property (nonatomic, strong) NSArray<NSDictionary*>* toggles;
-@property (nonatomic, strong) NSArray<NSDictionary*>* visibleToggles;
 
 - (instancetype)initWithAccount:(TFNTwitterAccount*)account;
 
@@ -26,11 +20,11 @@
 // Identifies the page's entry in the BHTSettings registry
 - (NSString*)pageKey;
 
-- (NSString*)pageTitleKey;
-- (NSString*)pageSubtitleKey;
-- (void)buildSettingsList;
+// Called after a toggle has been written, for pages that apply it immediately
+- (void)settingDidChange:(NSString*)key;
 
-- (void)updateVisibleToggles;
-- (void)switchChanged:(UISwitch*)sender;
+// The right-hand value of a button row, by default the preference named by the
+// entry's prefKeyForSubtitle
+- (NSString*)subtitleForEntry:(NSDictionary*)entry;
 
 @end

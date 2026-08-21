@@ -9,7 +9,6 @@
 #import "Core/BHTBundle.h"
 #import "Core/BHTSettings.h"
 #import "Headers/TWHeaders.h"
-#import "Settings/ModernSettingsCells.h"
 
 @implementation TweetsSettingsViewController
 
@@ -17,18 +16,13 @@
     return @"tweets";
 }
 
-- (UITableViewCell*)tableView:(UITableView*)tableView
-        cellForRowAtIndexPath:(NSIndexPath*)indexPath {
-    NSDictionary* settingData = self.visibleToggles[indexPath.row];
-    if ([settingData[@"key"] isEqualToString:@"undo_tweet_timeout"]) {
-        ModernSettingsCompactButtonCell* cell =
-            [tableView dequeueReusableCellWithIdentifier:@"CompactButtonCell"
-                                            forIndexPath:indexPath];
-        NSString* title = [[BHTBundle sharedBundle] localizedStringForKey:settingData[@"titleKey"]];
-        [cell configureWithTitle:title subtitle:[self undoTimeoutSubtitle]];
-        return cell;
+// The timeout is stored as a number, so its row value is formatted rather than
+// read straight from the preference.
+- (NSString*)subtitleForEntry:(NSDictionary*)entry {
+    if ([entry[@"key"] isEqualToString:@"undo_tweet_timeout"]) {
+        return [self labelForTimeout:[BHTSettings integerForKey:@"undo_tweet_timeout"]];
     }
-    return [super tableView:tableView cellForRowAtIndexPath:indexPath];
+    return [super subtitleForEntry:entry];
 }
 
 // A timeout of 0 reads as "Off"; any positive value shows its seconds.
@@ -39,10 +33,6 @@
     NSString* format = [[BHTBundle sharedBundle]
         localizedTwitterStringForKey:@"SUBSCRIPTION_UNDO_SEND_DURATION_LABEL"];
     return [NSString stringWithFormat:format, (long)seconds];
-}
-
-- (NSString*)undoTimeoutSubtitle {
-    return [self labelForTimeout:[BHTSettings integerForKey:@"undo_tweet_timeout"]];
 }
 
 // Off plus the same durations Twitter offers in its own premium undo settings.
@@ -59,7 +49,7 @@
                                                     [[NSUserDefaults standardUserDefaults]
                                                         setInteger:seconds.integerValue
                                                             forKey:@"undo_tweet_timeout"];
-                                                    [self.tableView reloadData];
+                                                    [self setNeedsUpdate:YES];
                                                 }]];
     }
 

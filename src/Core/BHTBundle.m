@@ -9,6 +9,7 @@
 
 @interface BHTBundle ()
 @property (nonatomic, strong) NSBundle* mainBundle;
+@property (nonatomic, strong) NSBundle* stringsBundle;
 @end
 
 @implementation BHTBundle
@@ -18,18 +19,20 @@
     dispatch_once(&onceToken, ^{
         NSFileManager* fileManager = [NSFileManager defaultManager];
         NSURL* bundlePath = nil;
-        if ([fileManager
-                fileExistsAtPath:
-                    @"/Library/Application Support/BHT/BHTwitter.bundle"]) {
-            bundlePath = [NSURL
-                fileURLWithPath:@"/Library/Application Support/BHT/BHTwitter.bundle"];
-        } else if ([fileManager fileExistsAtPath:@"/var/jb/Library/Application "
-                                                 @"Support/BHT/BHTwitter.bundle"]) {
-            bundlePath = [NSURL
-                fileURLWithPath:
-                    @"/var/jb/Library/Application Support/BHT/BHTwitter.bundle"];
-        } else {
-            bundlePath = [[NSBundle mainBundle] URLForResource:@"BHTwitter"
+        NSString* name = @TWEAK_NAME_STRING;
+
+        for (NSString* prefix in @[ @"", @"/var/jb" ]) {
+            NSString* path = [NSString
+                stringWithFormat:@"%@/Library/Application Support/%@/%@.bundle",
+                                 prefix, name, name];
+            if ([fileManager fileExistsAtPath:path]) {
+                bundlePath = [NSURL fileURLWithPath:path];
+                break;
+            }
+        }
+
+        if (!bundlePath) {
+            bundlePath = [[NSBundle mainBundle] URLForResource:name
                                                  withExtension:@"bundle"];
         }
 
@@ -40,13 +43,19 @@
 - (instancetype)initWithBundlePath:(NSURL*)bundlePath {
     if (self = [super init]) {
         self.mainBundle = [NSBundle bundleWithPath:[bundlePath path]];
+
+        NSURL* strings =
+            [self.mainBundle URLForResource:@TWEAK_STRINGS_BUNDLE_STRING
+                              withExtension:@"bundle"];
+        self.stringsBundle =
+            strings ? [NSBundle bundleWithURL:strings] : self.mainBundle;
     }
 
     return self;
 }
 
 - (NSString*)localizedStringForKey:(NSString*)key {
-    return [self.mainBundle localizedStringForKey:key value:key table:nil];
+    return [self.stringsBundle localizedStringForKey:key value:key table:nil];
 }
 
 // Fetches one of Twitter's own strings, reusing the app's translations for

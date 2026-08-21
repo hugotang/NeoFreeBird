@@ -11,6 +11,26 @@ static NSNumber* selectedThemeColor(void) {
     return [NSUserDefaults.standardUserDefaults objectForKey:@"bh_color_theme_selectedColor"];
 }
 
+// The native accent picker records its choice here before reaching
+// TAEColorSettings, so mirroring it keeps the pin below in agreement.
+%hook T1ColorSettings
+
++ (void)setPrimaryColorOption:(NSInteger)colorOption {
+    // The picker only offers options 1-6; 0 is the app clearing the accent for a
+    // non-premium account, which must leave the chosen color alone.
+    if (colorOption >= 1) {
+        [NSUserDefaults.standardUserDefaults setInteger:colorOption
+                                                 forKey:@"bh_color_theme_selectedColor"];
+        %orig(colorOption);
+        return;
+    }
+
+    NSNumber* selectedColor = selectedThemeColor();
+    %orig(selectedColor ? selectedColor.integerValue : colorOption);
+}
+
+%end
+
 // Every apply path (launch re-apply, trait changes, both settings pickers)
 // funnels through this setter, so coercing here keeps the custom color pinned.
 %hook TAEColorSettings
@@ -121,13 +141,9 @@ static NSArray* orderedTabEntries(NSArray* entries) {
 
 %end
 
-// MARK: - Tab bar icon and label theming
+// MARK: - Navigation bar icon and label theming
 
 static BOOL updatingTabIconColor = NO;
-
-static UIColor* tabItemColor(BOOL selected) {
-    return selected ? CurrentAccentColor() : [UIColor secondaryLabelColor];
-}
 
 %hook T1TabView
 
@@ -140,7 +156,8 @@ static UIColor* tabItemColor(BOOL selected) {
 
     updatingTabIconColor = YES;
     if ([BHTSettings boolForKey:@"tab_bar_theming"]) {
-        self.iconColor = tabItemColor(self.selected);
+        // nil falls back to the app's native item colour for unselected tabs.
+        self.iconColor = self.selected ? CurrentAccentColor() : nil;
     } else if (self.iconColor) {
         self.iconColor = nil;
     }
@@ -152,8 +169,10 @@ static UIColor* tabItemColor(BOOL selected) {
 - (void)_t1_updateTitleLabel {
     %orig;
 
-    if ([BHTSettings boolForKey:@"tab_bar_theming"]) {
-        self.titleLabel.textColor = tabItemColor(self.selected);
+    // %orig already colours the unselected label natively; only the selected
+    // item takes the custom accent.
+    if ([BHTSettings boolForKey:@"tab_bar_theming"] && self.selected) {
+        self.titleLabel.textColor = CurrentAccentColor();
     }
 }
 
@@ -164,10 +183,34 @@ static UIColor* tabItemColor(BOOL selected) {
     return %orig;
 }
 
-%new
-- (void)applyCurrentThemeToIcon {
-    [self _t1_updateImageViewAnimated:NO];
-    [self _t1_updateTitleLabel];
+%end
+
+// MARK: - Tab bar (top swipe segments) underline tinting
+
+// The redesigned segmented controller, used by Home, Jobs, Communities members
+// and activity history.
+%hook _TtC10TFNUISwift25SegmentedHighlightBarView
+
+- (void)setBackgroundColor:(UIColor*)color {
+    if (color && [BHTSettings boolForKey:@"tint_tab_bar"]) {
+        %orig(CurrentAccentColor());
+    } else {
+        %orig(color);
+    }
+}
+
+%end
+
+%hook TFNScrollingHorizontalLabelView
+
+- (UIColor*)_tfn_highlightedBarColorForItemAtIndex:(NSUInteger)index {
+    UIColor* color = %orig;
+
+    if (color && [BHTSettings boolForKey:@"tint_tab_bar"]) {
+        return CurrentAccentColor();
+    }
+
+    return color;
 }
 
 %end

@@ -12,6 +12,6 @@
 - (NSString*)localizedTwitterStringForKey:(NSString*)key;
 - (NSURL*)pathForFile:(NSString*)fileName;
 
-@property (nonatomic, strong, readonly) NSBundle* mainBundle;
+@property (nonatomic, strong, readonly) NSBundle* stringsBundle;
 
 @end

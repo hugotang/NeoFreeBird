@@ -3,7 +3,6 @@
 //  NeoFreeBird
 //
 
-#import <CoreText/CoreText.h>
 #import "HookHelpers.h"
 
 // MARK: - Always open in Safari

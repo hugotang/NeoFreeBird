@@ -19,15 +19,6 @@
 - (NSURL*)initialURL;
 @end
 
-static void changeTwitterColor(NSInteger colorID) {
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    TAEColorSettings* colorSettings =
-        [objc_getClass("TAEColorSettings") sharedSettings];
-
-    [defaults setObject:@(colorID)
-                 forKey:@"T1ColorSettingsPrimaryColorOptionKey"];
-    [colorSettings setPrimaryColorOption:colorID];
-}
 static UIImage* imageFromView(UIView* view) {
     TAEColorSettings* colorSettings =
         [objc_getClass("TAEColorSettings") sharedSettings];

@@ -1,0 +1,72 @@
+{
+  "package": "com.bandarhl.bhtwitter",
+  "name": "theacrat-NFB",
+  "version": "6.0.4",
+  "description": "Awesome tweak for Twitter",
+  "maintainer": "NeoFreeBird",
+  "author": "NeoFreeBird",
+  "section": "Tweaks",
+  "depends": [
+    {
+      "name": "mobilesubstrate",
+      "url": "https://github.com/dhinakg/ellekit-official/raw/gh-pages/pool/ellekit_1.1.3_iphoneos-arm64.deb"
+    },
+    {
+      "name": "ws.hbang.common",
+      "url": "https://github.com/hbang/libcephei/releases/download/2.0/ws.hbang.common_2.0_iphoneos-arm64.deb"
+    }
+  ],
+  "conflicts": [
+    "com.den.twigalaxy",
+    "xyz.cypwn.twigalaxy",
+    "xyz.cypwn.bhtwitter",
+    "com.netskao.twitternoads",
+    "xyz.cypwn.bringbacktwitter"
+  ],
+  "filter": {
+    "bundles": ["com.atebits.Tweetie2"]
+  },
+  "build": {
+    "archs": ["arm64"],
+    "sdk_version": "16.5",
+    "target_version": "14.0",
+    "subprojects": ["flex"],
+    "sideload_subprojects": ["zxPluginsInject/upstream"],
+    "frameworks": [
+      "UIKit",
+      "Foundation",
+      "AVFoundation",
+      "AVKit",
+      "CoreMotion",
+      "GameController",
+      "VideoToolbox",
+      "Accelerate",
+      "CoreMedia",
+      "CoreVideo",
+      "CoreImage",
+      "CoreGraphics",
+      "ImageIO",
+      "Photos",
+      "CoreServices",
+      "SystemConfiguration",
+      "SafariServices",
+      "Security",
+      "QuartzCore",
+      "WebKit",
+      "SceneKit"
+    ],
+    "private_frameworks": ["Preferences"],
+    "extra_frameworks": ["Cephei", "CepheiPrefs", "CepheiUI"],
+    "obj_files": ["deps/ffmpeg-kit-next/build/lib/*.a"],
+    "cflags": [
+      "-Isrc",
+      "-Ideps/ffmpeg-kit-next/build",
+      "-fobjc-arc",
+      "-Wno-deprecated-declarations",
+      "-Wno-nullability-completeness",
+      "-Wno-unused-function",
+      "-Wno-unused-property-ivar",
+      "-Wno-error"
+    ]
+  }
+}

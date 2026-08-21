@@ -1,0 +1,47 @@
+name: Setup Theos
+description: Install build dependencies, Theos, the Linux iOS toolchain and the iOS SDK
+
+inputs:
+  sdk-version:
+    description: iOS SDK version to install
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends fakeroot libtinfo6 libxml2
+        sudo curl -fsSL -o /usr/local/bin/ldid https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
+        sudo chmod +x /usr/local/bin/ldid
+
+    - name: Download Theos
+      uses: actions/checkout@v6
+      with:
+        repository: theos/theos
+        ref: master
+        path: theos
+        submodules: recursive
+
+    - name: Download iOS Toolchain
+      shell: bash
+      run: curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz | tar -xJf - -C theos/toolchain/
+
+    - name: iOS SDK Caching
+      id: sdk
+      uses: actions/cache@v6
+      with:
+        path: theos/sdks/
+        key: iOS-${{ inputs.sdk-version }}-SDK
+
+    - name: Download iOS SDK
+      if: steps.sdk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        git clone -n --depth=1 --filter=tree:0 https://github.com/theos/sdks/
+        cd sdks
+        git sparse-checkout set --no-cone iPhoneOS${{ inputs.sdk-version }}.sdk
+        git checkout
+        mv ./*.sdk "$GITHUB_WORKSPACE/theos/sdks"

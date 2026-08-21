@@ -17,9 +17,8 @@ extern void applySquareAvatarsSetting(void);
     return @"profiles";
 }
 
-- (void)switchChanged:(UISwitch*)sender {
-    [super switchChanged:sender];
-    NSString* key = objc_getAssociatedObject(sender, @"prefKey");
+- (void)settingDidChange:(NSString*)key {
+    [super settingDidChange:key];
     if ([key isEqualToString:@"square_avatars"]) {
         applySquareAvatarsSetting();
     }

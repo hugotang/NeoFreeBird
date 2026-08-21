@@ -141,6 +141,7 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         [key
             isEqualToString:@"grok_timeline_slideshow_imagine_menu_is_enabled"] ||
         [key isEqualToString:@"grok_ios_edit_photo_post_button_enabled"] ||
+        [key isEqualToString:@"x_ios_photo_editor_grok_imagine_enabled"] ||
         [key isEqualToString:@"grok_ios_imagine_cta_focal_enabled"] ||
         [key isEqualToString:@"grok_ios_imagine_cta_reply_enabled"] ||
         [key isEqualToString:@"grok_ios_imagine_cta_timeline_enabled"] ||
@@ -173,12 +174,6 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return @NO;
     }
 
-    // The profile hooks build on the classic header; the header rework
-    // replaces the action-buttons row with a separate catalog system.
-    if ([key isEqualToString:@"ios_profile_redesign_header_rework_enabled"]) {
-        return @NO;
-    }
-
     // Profile tabs
     if ([key isEqualToString:@"articles_timeline_profile_tab_enabled"]) {
         return @(![BHTSettings boolForKey:@"disable_articles"]);
@@ -186,6 +181,18 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
     if ([key isEqualToString:@"highlights_tweets_tab_ui_enabled"]) {
         return @(![BHTSettings boolForKey:@"disable_highlights"]);
+    }
+
+    // The profile redesign: the reworked header and timelines that fold Photos
+    // and Videos into one Media tab. The variant key styles the reworked
+    // header's action buttons, forced to its default while the rework is off.
+    if ([key isEqualToString:@"ios_profile_redesign_new_timelines_enabled"] ||
+        [key isEqualToString:@"ios_profile_redesign_header_rework_enabled"]) {
+        return [BHTSettings boolForKey:@"legacy_profile"] ? @NO : nil;
+    }
+
+    if ([key isEqualToString:@"ios_profile_redesign_header_buttons_variant"]) {
+        return [BHTSettings boolForKey:@"legacy_profile"] ? @0 : nil;
     }
 
     // Age verification bypass
@@ -217,6 +224,34 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return [BHTSettings boolForKey:@"disable_video_captions"] ? @NO : nil;
     }
 
+    // Swipeable carousel for multi-image tweets. The quoted-tweet variant has a
+    // view path that doesn't consult the main key, so both are forced.
+    if ([key isEqualToString:@"ios_ui_multi_media_carousel_enabled"] ||
+        [key isEqualToString:
+                 @"ios_ui_quote_tweet_multi_media_carousel_enabled"]) {
+        return [BHTSettings boolForKey:@"disable_media_carousel"] ? @NO : nil;
+    }
+
+    if ([key isEqualToString:@"tweet_with_visibility_results_prefer_gql_media_"
+                             @"interstitial_enabled"]) {
+        return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
+                   ? @NO
+                   : nil;
+    }
+
+    // Holds the idle timer open for a few minutes after every touch, refreshed
+    // on each one. Never force the companion idle-seconds key: zero there
+    // means never sleep at all.
+    if ([key isEqualToString:@"ios_prevent_sleep_app_wide_enabled"]) {
+        return @NO;
+    }
+
+    // Routes the built-in download through a watermarking downloader. Off by
+    // default, forced off so a server flip can't reach it.
+    if ([key isEqualToString:@"media_download_watermarked_video_enabled"]) {
+        return @NO;
+    }
+
     // Custom navigation: per-panel tab gates, forced on so every panel exists for
     // the editor to offer. The tab bar hook keeps them out of the bar and the
     // dash spoof (below) keeps the panels only unlocked here out of the side
@@ -234,14 +269,10 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return @YES;
     }
 
-    // The Media tab reads its switch as an integer and shows on this sentinel.
-    if ([key isEqualToString:@"media_tab_enabled"]) {
-        return @99;
-    }
-
-    // 0 hides the Communities tab, 1 is contextual-only; anything else shows it.
+    // The reader gates on this bool, then reads the visibility from the string
+    // value (forced to "always" in stringForKey: below).
     if ([key isEqualToString:@"c9s_tab_visibility"]) {
-        return @2;
+        return @YES;
     }
 
     if (!ReportGenuineTabGates) {
@@ -285,7 +316,10 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         [key isEqualToString:@"ssp_ads_immersive_client_only_integration"] ||
         [key isEqualToString:@"ssp_ads_tweet_details"] ||
         [key isEqualToString:
-                 @"ssp_ads_tweet_details_client_only_integration"]) {
+                 @"ssp_ads_tweet_details_client_only_integration"] ||
+        // Declared to the server in every timeline request's feature-switch
+        // map; the other ssp_ads_preroll_* keys have no reader in the client.
+        [key isEqualToString:@"ssp_ads_preroll_enabled"]) {
         return [BHTSettings boolForKey:@"hide_promoted"] ? @NO : nil;
     }
 
@@ -326,12 +360,19 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         [key isEqualToString:
                  @"subscriptions_gifting_premium_intro_copy_enabled"] ||
         [key isEqualToString:
-                 @"subscriptions_ios_download_to_offline_upsell_enabled"] ||
-        [key isEqualToString:
                  @"ios_notifications_blue_verified_introductory_offer_visible"] ||
         [key isEqualToString:@"ios_notifications_blue_verified_introductory_"
                              @"offer_prefix_visible"] ||
         [key isEqualToString:@"dash_items_download_grok_enabled"]) {
+        return @NO;
+    }
+
+    // XChat upsells. The rate-limit key only decides whether the composer
+    // watches the send result to raise a paywall; the message is sent either
+    // way. Grok in DMs is paywalled behind a minimum tier, so it goes with the
+    // rest of the upsells rather than being unlocked.
+    if ([key isEqualToString:@"xchat_message_request_rate_limit_upsell"] ||
+        [key isEqualToString:@"xchat_plaintext_grok_enabled"]) {
         return @NO;
     }
 
@@ -358,7 +399,9 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
                  @"ios_tweet_promote_button_sent_tweet_toast_enabled"] ||
         [key isEqualToString:
                  @"ios_tweet_promote_button_third_party_boost_enabled"] ||
-        [key isEqualToString:@"thirdparty_boost_author_view_button_enabled"]) {
+        [key isEqualToString:@"thirdparty_boost_author_view_button_enabled"] ||
+        [key isEqualToString:@"boost_tab_enabled"] ||
+        [key isEqualToString:@"boost_tab_verified_enabled"]) {
         return @NO;
     }
 
@@ -384,11 +427,32 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 // can be wrapped in TFSInstrumentedFeatureSwitches, which implements its own
 // typed getters, so both classes need the same hooks.
 
+// String-typed switches need their own override path; the numeric one can't
+// carry an enum string. Only the Communities visibility switch needs it so far.
+static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
+    if ([key isEqualToString:@"c9s_tab_visibility"]) {
+        return @"always";
+    }
+
+    if ([key isEqualToString:
+                 @"subscriptions_upsells_ios_premium_right_nav_button_variant"] &&
+        [BHTSettings boolForKey:@"hide_premium_offer"]) {
+        return @"";
+    }
+
+    return nil;
+}
+
 %hook TFSFeatureSwitches
 
 - (BOOL)boolForKey:(NSString*)key {
     NSNumber* override = FeatureSwitchOverrideValueForKey(key);
     return override ? override.boolValue : %orig;
+}
+
+- (NSString*)stringForKey:(NSString*)key {
+    NSString* override = FeatureSwitchStringOverrideForKey(key);
+    return override ?: %orig;
 }
 
 - (NSInteger)integerForKey:(NSString*)key {
@@ -431,6 +495,11 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
     return override ? override.boolValue : %orig;
 }
 
+- (NSString*)stringForKey:(NSString*)key {
+    NSString* override = FeatureSwitchStringOverrideForKey(key);
+    return override ?: %orig;
+}
+
 - (NSInteger)integerForKey:(NSString*)key {
     NSNumber* override = FeatureSwitchOverrideValueForKey(key);
     return override ? override.integerValue : %orig;
@@ -458,6 +527,33 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
 - (BOOL)hasNonDefaultValueForKey:(NSString*)key {
     return FeatureSwitchOverrideValueForKey(key) ? YES : %orig;
+}
+
+%end
+
+// XChat reads its switches from its own store rather than TFSFeatureSwitches,
+// so the xchat_ keys need the same treatment here.
+
+%hook _TtC16XFeatureSwitches18FeatureSwitchStore
+
+- (BOOL)boolForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ? override.boolValue : %orig;
+}
+
+- (BOOL)boolForKey:(NSString*)key defaultValue:(BOOL)defaultValue {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ? override.boolValue : %orig;
+}
+
+- (NSString*)stringForKey:(NSString*)key {
+    NSString* override = FeatureSwitchStringOverrideForKey(key);
+    return override ?: %orig;
+}
+
+- (NSString*)stringForKey:(NSString*)key defaultValue:(NSString*)defaultValue {
+    NSString* override = FeatureSwitchStringOverrideForKey(key);
+    return override ?: %orig;
 }
 
 %end
@@ -721,12 +817,12 @@ BOOL panelIsGenuinelyAvailable(long long panelID) {
                                       @selector(birdwatchHomePageIsEnabled)) &&
                    genuineTabGateFlag(switches, @selector(birdwatchHistoryIsEnabled));
         }
-        case 16: // Premium hub
+        case 15: // Premium hub
             return genuineSwitchBool(@"subscriptions_premium_hub_enabled");
-        case 17: // Jobs
+        case 16: // Jobs
             return genuineSwitchBool(@"recruiting_global_jobs_hub_enabled") ||
                    genuineSwitchBool(@"recruiting_jetfuel_jobs_hub_enabled");
-        case 18: { // Money
+        case 17: { // Money
             id host =
                 ((id (*)(id, SEL))objc_msgSend)(objc_getClass("T1HostViewController"),
                                                 @selector(sharedHostViewController));
@@ -774,7 +870,7 @@ static __thread BOOL DashPanelIDQuery = NO;
         }
     };
 
-    for (NSNumber* panelID in @[@13, @16, @17, @18]) {
+    for (NSNumber* panelID in @[@13, @15, @16, @17]) {
         if (!panelIsGenuinelyAvailable(panelID.longLongValue)) {
             claim(panelID);
         }
@@ -785,7 +881,7 @@ static __thread BOOL DashPanelIDQuery = NO;
     }
 
     if (!AccountIsGenuinelyPremium()) {
-        claim(@16);
+        claim(@15);
     }
 
     return spoofed;
@@ -833,16 +929,6 @@ static __thread BOOL DashPanelIDQuery = NO;
 - (id)innerImageInterstitial {
     return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
                ? nil
-               : %orig;
-}
-
-%end
-
-%hook HFHealthSafetyFeature
-
-+ (BOOL)isTweetMedialInterstitialEnabled:(id)featureSwitches {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
                : %orig;
 }
 

@@ -32,13 +32,25 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                       @"default": @NO}
                 ]
             },
+            @"accent": @{
+                @"titleKey": @"ACCENT_COLOR_TITLE",
+                @"settings": @[
+                    @{@"type": @"accentPicker"},
+                    @{@"key": @"color_twitter_icon_in_top_bar",
+                      @"default": @([BHTManager isTwitterBranded])},
+                    @{@"key": @"tint_tab_bar",
+                      @"default": @NO},
+                    @{@"key": @"tab_bar_theming",
+                      @"default": @NO}
+                ]
+            },
             @"appearance": @{
                 @"titleKey": @"MODERN_SETTINGS_APPEARANCE_TITLE",
                 @"subtitleKey": @"MODERN_SETTINGS_APPEARANCE_SUBTITLE",
                 @"settings": @[
                     @{
-                        @"titleKey": @"THEME_OPTION_TITLE",
-                        @"action": @"showThemeViewController:",
+                        @"titleKey": @"ACCENT_COLOR_TITLE",
+                        @"action": @"showAccentColorViewController:",
                         @"type": @"button"
                     },
                     @{
@@ -51,8 +63,6 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"action": @"showCustomTabBarVC:",
                         @"type": @"button"
                     },
-                    @{@"key": @"tab_bar_theming",
-                      @"default": @NO},
                     @{@"key": @"restore_tab_labels",
                       @"default": @NO},
                     @{@"key": @"custom_fonts",
@@ -147,6 +157,11 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"type": @"toggle"
                     },
                     @{
+                        @"key": @"disable_media_carousel",
+                        @"default": @NO,
+                        @"type": @"toggle"
+                    },
+                    @{
                         @"key": @"restore_video_timestamp",
                         @"default": @NO,
                         @"type": @"toggle"
@@ -166,11 +181,6 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                       @"default": @NO,
                       @"type": @"toggle"},
                     @{
-                        @"key": @"copy_profile_info",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
                         @"key": @"disable_articles",
                         @"default": @YES,
                         @"type": @"toggle"
@@ -178,6 +188,11 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                     @{
                         @"key": @"disable_highlights",
                         @"default": @YES,
+                        @"type": @"toggle"
+                    },
+                    @{
+                        @"key": @"legacy_profile",
+                        @"default": @NO,
                         @"type": @"toggle"
                     },
                     @{
@@ -287,12 +302,12 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"type": @"toggle"
                     },
                     @{
-                        @"key": @"refresh_pill_label",
+                        @"key": @"restore_twitter_icons",
                         @"default": @([BHTManager isTwitterBranded]),
                         @"type": @"toggle"
                     },
                     @{
-                        @"key": @"color_twitter_icon_in_top_bar",
+                        @"key": @"refresh_pill_label",
                         @"default": @([BHTManager isTwitterBranded]),
                         @"type": @"toggle"
                     }
@@ -370,7 +385,6 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsIndex(void) {
         @"video_layer_caption": @"disable_video_captions",
         @"autoHighestLoad": @"auto_highest_load",
         @"follow_con": @"follow_confirm",
-        @"CopyProfileInfo": @"copy_profile_info",
         @"disableArticles": @"disable_articles",
         @"disableHighlights": @"disable_highlights",
         @"TweetToImage": @"tweet_to_image",

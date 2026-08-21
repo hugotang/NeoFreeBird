@@ -9,54 +9,23 @@
 #import "Core/BHTBundle.h"
 #import "Core/BHTSettings.h"
 #import "Headers/TWHeaders.h"
-#import "Settings/ModernSettingsCells.h"
+#import "Settings/Pages/AccentColorSettingsViewController.h"
 
 @interface AppearanceSettingsViewController () <UIFontPickerViewControllerDelegate>
 @end
 
 @implementation AppearanceSettingsViewController
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    self.tableView.estimatedRowHeight = 60;
-    [self.tableView registerClass:[ModernSettingsSimpleButtonCell class]
-           forCellReuseIdentifier:@"SimpleButtonCell"];
-}
-
 - (NSString*)pageKey {
     return @"appearance";
 }
 
-- (UITableViewCell*)tableView:(UITableView*)tableView
-        cellForRowAtIndexPath:(NSIndexPath*)indexPath {
-    NSDictionary* settingData = self.visibleToggles[indexPath.row];
-    if ([settingData[@"type"] isEqualToString:@"button"]) {
-        ModernSettingsSimpleButtonCell* cell =
-            [tableView dequeueReusableCellWithIdentifier:@"SimpleButtonCell"
-                                            forIndexPath:indexPath];
-        NSString* title = [[BHTBundle sharedBundle] localizedStringForKey:settingData[@"titleKey"]];
-        [cell configureWithTitle:title];
-        return cell;
-    }
-    return [super tableView:tableView cellForRowAtIndexPath:indexPath];
-}
-
 #pragma mark - Sub-page Navigation
 
-- (void)showThemeViewController:(NSDictionary*)sender {
-    Class ColorThemeViewControllerClass = objc_getClass("ColorThemeViewController");
-    if (ColorThemeViewControllerClass) {
-        UIViewController* themeVC = [[ColorThemeViewControllerClass alloc] init];
-        if (self.account) {
-            [themeVC.navigationItem
-                setTitleView:
-                    [objc_getClass("TFNTitleView")
-                        titleViewWithTitle:[[BHTBundle sharedBundle]
-                                               localizedStringForKey:@"THEME_SETTINGS_NAVIGATION_TITLE"]
-                                  subtitle:self.account.displayUsername]];
-        }
-        [self.navigationController pushViewController:themeVC animated:YES];
-    }
+- (void)showAccentColorViewController:(NSDictionary*)sender {
+    UIViewController* accentVC =
+        [[AccentColorSettingsViewController alloc] initWithAccount:self.account];
+    [self.navigationController pushViewController:accentVC animated:YES];
 }
 
 - (void)showAppIconViewController:(NSDictionary*)sender {
@@ -166,9 +135,8 @@
     }
 }
 
-- (void)switchChanged:(UISwitch*)sender {
-    [super switchChanged:sender];
-    NSString* key = objc_getAssociatedObject(sender, @"prefKey");
+- (void)settingDidChange:(NSString*)key {
+    [super settingDidChange:key];
     if ([key isEqualToString:@"tab_bar_theming"]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self refreshAllTabViewsWithTheming];
@@ -239,8 +207,7 @@
     } else {
         [[NSUserDefaults standardUserDefaults] setObject:fontFamily forKey:@"bhtwitter_font_1"];
     }
-    [self updateVisibleToggles];
-    [self.tableView reloadData];
+    [self setNeedsUpdate:YES];
     [viewController.navigationController popViewControllerAnimated:YES];
 }
 

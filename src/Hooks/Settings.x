@@ -11,8 +11,7 @@ static const void* SettingsEntryKey = &SettingsEntryKey;
 static const void* SettingsRootKey = &SettingsRootKey;
 
 static BOOL isSettingsClass(UIViewController* viewController) {
-    return [viewController isKindOfClass:objc_getClass("T1GenericSettingsViewController")] ||
-           [viewController isKindOfClass:objc_getClass("T1SettingsViewController")];
+    return [viewController isKindOfClass:objc_getClass("T1GenericSettingsViewController")];
 }
 
 // The generic controller backs the root and every sub-page alike, so the root is
@@ -125,13 +124,6 @@ static NSArray* sectionsWithNeoFreeBirdEntry(TFNItemsDataViewController* setting
 }
 
 %hook T1GenericSettingsViewController
-- (void)viewWillAppear:(BOOL)animated {
-    %orig;
-    insertNeoFreeBirdSettingsIfRoot(self);
-}
-%end
-
-%hook T1SettingsViewController
 - (void)viewWillAppear:(BOOL)animated {
     %orig;
     insertNeoFreeBirdSettingsIfRoot(self);

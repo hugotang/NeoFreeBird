@@ -7,72 +7,15 @@
 
 // MARK: - Hide Blue verified checkmark
 
-// The author-row badge (SimpleBadgeable.init(statusViewModel:)) builds from the
-// merged verified flag plus identityType and ignores isBlueVerified, so both
-// getters must be silenced; brand/government badges survive via identityType.
-// TFNTwitterUser and TFNTwitterCanonicalUser forward here and need no hooks.
-
-%hook TFSTwitterUser
-
-- (id)isBlueVerified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? nil : %orig;
+static BOOL IsHiddenBlueCheckmark(NSString* imageName) {
+    return [imageName isEqualToString:@"verified"] &&
+           [BHTSettings boolForKey:@"hide_blue_verified"];
 }
 
-- (BOOL)verified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? NO : %orig;
-}
+%hook UIImage
 
-%end
-
-// Reaches into the wrapped user's storage directly instead of through its
-// getter.
-%hook TFSTwitterUserSource
-
-- (id)isBlueVerified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? nil : %orig;
-}
-
-- (BOOL)verified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? NO : %orig;
-}
-
-%end
-
-%hook TFSTwitterTypeaheadUser
-
-- (id)isBlueVerified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? nil : %orig;
-}
-
-- (BOOL)verified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? NO : %orig;
-}
-
-%end
-
-%hook TFSDirectMessageUser
-
-- (id)isBlueVerified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? nil : %orig;
-}
-
-- (BOOL)verified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? NO : %orig;
-}
-
-%end
-
-// Status view models cache these flags at init, beyond the user model hooks;
-// the author row badge reads isFromUserVerified, and other view models forward
-// here.
-%hook T1TwitterCoreStatusViewModelAdapter
-
-- (BOOL)isFromUserBlueVerified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? NO : %orig;
-}
-
-- (BOOL)isFromUserVerified {
-    return [BHTSettings boolForKey:@"hide_blue_verified"] ? NO : %orig;
++ (id)_tfn_vectorImageDocumentNamed:(NSString*)name {
+    return IsHiddenBlueCheckmark(name) ? nil : %orig;
 }
 
 %end

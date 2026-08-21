@@ -6,6 +6,7 @@
 //
 
 #import "Settings/Pages/DebugSettingsViewController.h"
+#import "Core/BHTSettings.h"
 #import "Headers/TWHeaders.h"
 
 @implementation DebugSettingsViewController
@@ -14,11 +15,10 @@
     return @"debug";
 }
 
-- (void)switchChanged:(UISwitch*)sender {
-    [super switchChanged:sender];
-    NSString* key = objc_getAssociatedObject(sender, @"prefKey");
+- (void)settingDidChange:(NSString*)key {
+    [super settingDidChange:key];
     if ([key isEqualToString:@"flex_twitter"]) {
-        if (sender.isOn) {
+        if ([BHTSettings boolForKey:key]) {
             [[objc_getClass("FLEXManager") sharedManager] showExplorer];
         } else {
             [[objc_getClass("FLEXManager") sharedManager] hideExplorer];

@@ -7,11 +7,14 @@
 
 #import "Settings/ModernSettingsPageViewController.h"
 #import "Core/BHTBundle.h"
-#import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
 #import "Headers/TWHeaders.h"
-#import "Settings/ModernSettingsCells.h"
-#import "ThemeColor/Palette.h"
+
+// Twitter's own accent picker, as used by T1DisplaySettingsViewController: a
+// state-free item that reads and writes the accent itself.
+static const char* const kAccentPickerItemClass = "_TtC14T1TwitterSwift20ColorThemePickerItem";
+static const char* const kAccentPickerAdapterClass =
+    "_TtC14T1TwitterSwift27ColorThemePickerItemAdapter";
 
 @interface ModernSettingsPageViewController ()
 @property (nonatomic, copy) NSString* registryPageKey;
@@ -26,11 +29,20 @@
 }
 
 - (instancetype)initWithAccount:(TFNTwitterAccount*)account pageKey:(NSString*)pageKey {
-    if ((self = [super init])) {
+    if ((self = [super initWithCollectionViewLayout:nil])) {
         self.account = account;
         self.registryPageKey = pageKey;
-        [self buildSettingsList];
-        [self updateVisibleToggles];
+        [self useDataViewAdapter:[[objc_getClass("TFNSettingsDescriptionItemTableRowAdapter") alloc] init]
+                 forItemsOfClass:objc_getClass("TFNSettingsDescriptionItem")];
+
+        Class accentPickerClass = objc_getClass(kAccentPickerItemClass);
+        Class accentPickerAdapterClass = objc_getClass(kAccentPickerAdapterClass);
+        if (accentPickerClass && accentPickerAdapterClass) {
+            [self useDataViewAdapter:[[accentPickerAdapterClass alloc] init]
+                     forItemsOfClass:accentPickerClass];
+        }
+
+        [self setNeedsUpdate:NO];
     }
     return self;
 }
@@ -38,31 +50,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self setupNav];
-    [self setupTable];
 }
-
-#pragma mark - Page Registry
-
-- (NSString*)pageKey {
-    return self.registryPageKey;
-}
-
-- (NSString*)pageTitleKey {
-    return [BHTSettings titleKeyForPage:[self pageKey]];
-}
-
-- (NSString*)pageSubtitleKey {
-    return [BHTSettings subtitleKeyForPage:[self pageKey]];
-}
-
-- (void)buildSettingsList {
-    self.toggles = [BHTSettings settingsForPage:[self pageKey]];
-}
-
-#pragma mark - Setup
 
 - (void)setupNav {
-    NSString* title = [[BHTBundle sharedBundle] localizedStringForKey:[self pageTitleKey]];
+    NSString* title = [[BHTBundle sharedBundle]
+        localizedStringForKey:[BHTSettings titleKeyForPage:[self pageKey]]];
     if (self.account) {
         self.navigationItem.titleView =
             [objc_getClass("TFNTitleView") titleViewWithTitle:title
@@ -72,52 +64,14 @@
     }
 }
 
-- (void)setupTable {
-    self.view.backgroundColor = [Palette currentBackgroundColor];
-    self.tableView = [[UITableView alloc] initWithFrame:self.view.bounds
-                                                  style:UITableViewStyleGrouped];
-    self.tableView.autoresizingMask =
-        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.tableView.dataSource = self;
-    self.tableView.delegate = self;
-    self.tableView.backgroundColor = [Palette currentBackgroundColor];
-    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
-    self.tableView.rowHeight = UITableViewAutomaticDimension;
-    self.tableView.showsVerticalScrollIndicator = NO;
-    self.tableView.showsHorizontalScrollIndicator = NO;
-    self.tableView.estimatedRowHeight = 80;
-    [self.tableView registerClass:[ModernSettingsToggleCell class]
-           forCellReuseIdentifier:@"ToggleCell"];
-    [self.tableView registerClass:[ModernSettingsTableViewCell class]
-           forCellReuseIdentifier:@"ButtonCell"];
-    [self.tableView registerClass:[ModernSettingsCompactButtonCell class]
-           forCellReuseIdentifier:@"CompactButtonCell"];
-    [self.view addSubview:self.tableView];
+#pragma mark - Page Registry
+
+- (NSString*)pageKey {
+    return self.registryPageKey;
 }
 
-#pragma mark - Visible Toggles
-
-- (void)updateVisibleToggles {
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableArray* visible = [NSMutableArray array];
-    for (NSDictionary* toggleData in self.toggles) {
-        NSString* parentKey = toggleData[@"parentKey"];
-        if (parentKey) {
-            BOOL parentEnabled = [[defaults objectForKey:parentKey] ?: toggleData[@"default"] boolValue];
-            if (parentEnabled) {
-                [visible addObject:toggleData];
-            }
-        } else {
-            [visible addObject:toggleData];
-        }
-    }
-    self.visibleToggles = [visible copy];
-}
-
-#pragma mark - UITableViewDataSource
-
-- (NSInteger)tableView:(UITableView*)tableView numberOfRowsInSection:(NSInteger)section {
-    return self.visibleToggles.count;
+- (NSArray<NSDictionary*>*)entries {
+    return [BHTSettings settingsForPage:[self pageKey]];
 }
 
 // Title key defaults to KEY_TITLE; an explicit titleKey takes precedence.
@@ -146,166 +100,130 @@
     return entry[@"subtitleDefault"];
 }
 
-- (UITableViewCell*)tableView:(UITableView*)tableView
-        cellForRowAtIndexPath:(NSIndexPath*)indexPath {
-    NSDictionary* toggleData = self.visibleToggles[indexPath.row];
-    NSString* type = toggleData[@"type"];
-    if ([type isEqualToString:@"compactButton"]) {
-        ModernSettingsCompactButtonCell* cell =
-            [tableView dequeueReusableCellWithIdentifier:@"CompactButtonCell"
-                                            forIndexPath:indexPath];
-        NSString* title = [self localizedTitleForEntry:toggleData];
-        NSString* subtitle = @"";
-        NSString* prefKey = toggleData[@"prefKeyForSubtitle"];
-        if (prefKey) {
-            NSString* defaultSubtitle = [self defaultSubtitleForEntry:toggleData];
-            subtitle = [[NSUserDefaults standardUserDefaults] objectForKey:prefKey] ?: defaultSubtitle;
-            if ([toggleData[@"isSecure"] boolValue] && subtitle.length > 0 &&
-                ![subtitle isEqualToString:defaultSubtitle]) {
-                subtitle = @"••••••••••••••••";
-            }
+- (NSString*)subtitleForEntry:(NSDictionary*)entry {
+    NSString* prefKey = entry[@"prefKeyForSubtitle"];
+    if (!prefKey) {
+        return nil;
+    }
+    return [[NSUserDefaults standardUserDefaults] objectForKey:prefKey]
+               ?: [self defaultSubtitleForEntry:entry];
+}
+
+#pragma mark - Items
+
+- (void)update:(BOOL)animated {
+    [super update:animated];
+
+    NSMutableArray* rows = [NSMutableArray array];
+    for (NSDictionary* entry in [self entries]) {
+        NSString* parentKey = entry[@"parentKey"];
+        if (parentKey && ![BHTSettings boolForKey:parentKey]) {
+            continue;
         }
-        [cell configureWithTitle:title subtitle:subtitle];
-        return cell;
-    } else if ([type isEqualToString:@"button"]) {
-        ModernSettingsTableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:@"ButtonCell"
-                                                                            forIndexPath:indexPath];
-        NSString* title = [self localizedTitleForEntry:toggleData];
-        NSString* subtitle = @"";
-        NSString* prefKey = toggleData[@"prefKeyForSubtitle"];
-        if (prefKey) {
-            NSString* defaultSubtitle = [self defaultSubtitleForEntry:toggleData];
-            subtitle = [[NSUserDefaults standardUserDefaults] objectForKey:prefKey] ?: defaultSubtitle;
-            if ([toggleData[@"isSecure"] boolValue] && subtitle.length > 0 &&
-                ![subtitle isEqualToString:defaultSubtitle]) {
-                subtitle = @"••••••••••••••••";
-            }
-        }
-        NSString* iconName = toggleData[@"icon"];
-        [cell configureWithTitle:title subtitle:subtitle iconName:iconName];
-        return cell;
+        [rows addObjectsFromArray:[self itemsForEntry:entry]];
+    }
+
+    NSArray* sections = [self updatedSections:@[rows] forStyle:0];
+    if (animated) {
+        [self updateSections:sections];
     } else {
-        ModernSettingsToggleCell* cell = [tableView dequeueReusableCellWithIdentifier:@"ToggleCell"
-                                                                         forIndexPath:indexPath];
-        NSString* key = toggleData[@"key"];
-        NSString* title = [self localizedTitleForEntry:toggleData];
-        NSString* subtitle = [self localizedDetailForKey:key];
-        [cell configureWithTitle:title subtitle:subtitle];
-        BOOL isEnabled = [[[NSUserDefaults standardUserDefaults] objectForKey:key]
-                              ?: toggleData[@"default"] boolValue];
-        cell.toggleSwitch.on = isEnabled;
-        objc_setAssociatedObject(cell.toggleSwitch, @"prefKey", key, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        [cell addTarget:self
-                      action:@selector(switchChanged:)
-            forControlEvents:UIControlEventValueChanged];
-        return cell;
+        self.sections = sections;
     }
 }
 
-#pragma mark - UITableViewDelegate
+- (NSArray*)itemsForEntry:(NSDictionary*)entry {
+    NSString* type = entry[@"type"];
+    if ([type isEqualToString:@"button"] || [type isEqualToString:@"compactButton"]) {
+        return @[[self buttonItemForEntry:entry]];
+    }
 
-- (void)tableView:(UITableView*)tableView didSelectRowAtIndexPath:(NSIndexPath*)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    NSDictionary* data = self.visibleToggles[indexPath.row];
-    if ([data[@"type"] isEqualToString:@"button"] ||
-        [data[@"type"] isEqualToString:@"compactButton"]) {
-        NSString* actionName = data[@"action"];
-        if (actionName) {
-            SEL action = NSSelectorFromString(actionName);
-            if ([self respondsToSelector:action]) {
+    if ([type isEqualToString:@"accentPicker"]) {
+        return [self accentPickerItemsForEntry:entry];
+    }
+
+    NSMutableArray* items = [NSMutableArray arrayWithObject:[self toggleItemForEntry:entry]];
+    NSString* detail = [self localizedDetailForKey:entry[@"key"]];
+    if (detail.length > 0) {
+        [items addObject:[[objc_getClass("TFNSettingsDescriptionItem") alloc]
+                             initForNoActionWithText:detail]];
+    }
+    return items;
+}
+
+- (id)toggleItemForEntry:(NSDictionary*)entry {
+    NSString* key = entry[@"key"];
+    __weak typeof(self) weakSelf = self;
+    TFNBooleanItem* item = [[objc_getClass("TFNBooleanItem") alloc]
+        initWithStyle:0
+                 text:[self localizedTitleForEntry:entry]
+                value:[BHTSettings boolForKey:key]
+         updateAction:^(TFNDataViewItemArgs* args) {
+             BOOL value = [(TFNBooleanItem*)args.item value];
+             [[NSUserDefaults standardUserDefaults] setBool:value forKey:key];
+             [weakSelf settingDidChange:key];
+         }];
+
+    return [item tfn_withMultipleLines:YES];
+}
+
+- (NSArray*)accentPickerItemsForEntry:(NSDictionary*)entry {
+    Class accentPickerClass = objc_getClass(kAccentPickerItemClass);
+    if (!accentPickerClass) {
+        return @[];
+    }
+
+    id picker = [[accentPickerClass alloc] init];
+    if (!entry[@"titleKey"]) {
+        return @[picker];
+    }
+
+    return @[[[self localizedTitleForEntry:entry] tfn_asNextSectionHeader], picker];
+}
+
+- (id)buttonItemForEntry:(NSDictionary*)entry {
+    T1SubtitledSettingsItem* item = [[objc_getClass("T1SubtitledSettingsItem") alloc] init];
+    item.title = [self localizedTitleForEntry:entry];
+    item.subtitle = [self subtitleForEntry:entry];
+
+    __weak typeof(self) weakSelf = self;
+    item.didSelectRowAtIndexPathBlock =
+        ^(TFNGenericItem* selectedItem, TFNItemsDataViewController* controller,
+          UITableView* tableView, NSIndexPath* indexPath) {
+            [tableView deselectRowAtIndexPath:indexPath animated:YES];
+            [weakSelf performActionForEntry:entry];
+        };
+    return item;
+}
+
+#pragma mark - Actions
+
+- (void)performActionForEntry:(NSDictionary*)entry {
+    NSString* actionName = entry[@"action"];
+    if (!actionName) {
+        return;
+    }
+
+    SEL action = NSSelectorFromString(actionName);
+    if (![self respondsToSelector:action]) {
+        return;
+    }
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-                [self performSelector:action
-                           withObject:data];
+    [self performSelector:action
+               withObject:entry];
 #pragma clang diagnostic pop
-            }
+}
+
+// Children are only listed while their parent is on, so a parent's change
+// rebuilds the page and the rows animate in or out.
+- (void)settingDidChange:(NSString*)key {
+    for (NSDictionary* entry in [self entries]) {
+        if ([entry[@"parentKey"] isEqualToString:key]) {
+            [self setNeedsUpdate:YES];
+            return;
         }
     }
-}
-
-- (UIView*)tableView:(UITableView*)tableView viewForHeaderInSection:(NSInteger)section {
-    UIView* header = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, 0)];
-    UILabel* label = [[UILabel alloc] init];
-    label.translatesAutoresizingMaskIntoConstraints = NO;
-    label.text = [[BHTBundle sharedBundle] localizedStringForKey:[self pageSubtitleKey]];
-    label.numberOfLines = 0;
-    id fontGroup = [BHTManager sharedFontGroup];
-    label.font = [fontGroup performSelector:@selector(subtext2Font)];
-    Class TAEColorSettingsCls = objc_getClass("TAEColorSettings");
-    id settings = [TAEColorSettingsCls sharedSettings];
-    id colorPalette = [[settings currentColorPalette] colorPalette];
-    UIColor* subtitleColor = [colorPalette performSelector:@selector(tabBarItemColor)];
-    label.textColor = subtitleColor;
-    [header addSubview:label];
-    [NSLayoutConstraint activateConstraints:@[
-        [label.leadingAnchor constraintEqualToAnchor:header.leadingAnchor
-                                            constant:20],
-        [label.trailingAnchor constraintEqualToAnchor:header.trailingAnchor
-                                             constant:-20],
-        [label.topAnchor constraintEqualToAnchor:header.topAnchor
-                                        constant:8],
-        [label.bottomAnchor constraintEqualToAnchor:header.bottomAnchor
-                                           constant:-8]
-    ]];
-    return header;
-}
-
-- (CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
-    return UITableViewAutomaticDimension;
-}
-
-#pragma mark - Switch Handling
-
-- (void)switchChanged:(UISwitch*)sender {
-    NSString* key = objc_getAssociatedObject(sender, @"prefKey");
-    if (key) {
-        [[NSUserDefaults standardUserDefaults] setBool:sender.isOn forKey:key];
-        [self updateAndAnimateChangesForKey:key];
-    }
-}
-
-- (void)updateAndAnimateChangesForKey:(NSString*)key {
-    NSArray* oldVisibleToggles = self.visibleToggles;
-    [self updateVisibleToggles];
-    NSArray* newVisibleToggles = self.visibleToggles;
-    [self.tableView beginUpdates];
-    __block NSInteger toggleIndex = -1;
-    [oldVisibleToggles enumerateObjectsUsingBlock:^(NSDictionary* _Nonnull obj, NSUInteger idx,
-                                                    BOOL* _Nonnull stop) {
-        if ([obj[@"key"] isEqualToString:key]) {
-            toggleIndex = idx;
-            *stop = YES;
-        }
-    }];
-    if (toggleIndex == -1) {
-        [self.tableView endUpdates];
-        [self.tableView reloadData];
-        return;
-    }
-    NSMutableArray* children = [NSMutableArray array];
-    for (NSDictionary* toggleData in self.toggles) {
-        if ([toggleData[@"parentKey"] isEqualToString:key]) {
-            [children addObject:toggleData];
-        }
-    }
-    if (children.count == 0) {
-        [self.tableView endUpdates];
-        return;
-    }
-    BOOL isAdding = newVisibleToggles.count > oldVisibleToggles.count;
-    // Children are registered directly after their parent, so their rows are contiguous below it.
-    NSMutableArray* indexPaths = [NSMutableArray array];
-    for (int i = 0; i < children.count; i++) {
-        [indexPaths addObject:[NSIndexPath indexPathForRow:toggleIndex + 1 + i inSection:0]];
-    }
-    if (isAdding) {
-        [self.tableView insertRowsAtIndexPaths:indexPaths
-                              withRowAnimation:UITableViewRowAnimationAutomatic];
-    } else {
-        [self.tableView deleteRowsAtIndexPaths:indexPaths
-                              withRowAnimation:UITableViewRowAnimationAutomatic];
-    }
-    [self.tableView endUpdates];
 }
 
 @end

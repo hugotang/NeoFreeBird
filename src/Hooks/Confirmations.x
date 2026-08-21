@@ -40,11 +40,41 @@ static void ShowConfirmation(void (^confirmed)(void)) {
 
 %end
 
+%hook T1ComposeViewController
+
+- (void)_t1_didTapSendButton:(__unsafe_unretained UIButton*)sendButton {
+    if (![BHTSettings boolForKey:@"tweet_confirm"]) {
+        return %orig;
+    }
+
+    ShowConfirmation(^{
+        %orig;
+    });
+}
+
+%end
+
 // MARK: - Follow confirm
 
 %hook TUIFollowControl
 
 - (void)_followUser:(id)sender event:(id)event {
+    if (![BHTSettings boolForKey:@"follow_confirm"]) {
+        return %orig;
+    }
+
+    ShowConfirmation(^{
+        %orig;
+    });
+}
+
+%end
+
+// The redesigned profile row and the nav bar use their own button, which never
+// routes through TUIFollowControl.
+%hook TUIFollowButtonV2
+
+- (void)buttonTapped {
     if (![BHTSettings boolForKey:@"follow_confirm"]) {
         return %orig;
     }
@@ -91,11 +121,40 @@ static void ShowConfirmation(void (^confirmed)(void)) {
 
 %end
 
-// The fullscreen media viewer's heart has its own action path.
-%hook T1SlideshowStatusView
+// The fullscreen media viewer's heart is now the immersive action stack. Both
+// the button and its target-action wrapper carry a one-byte action type; 3 is
+// favorite, so only that one gets confirmed.
+static BOOL isImmersiveFavoriteAction(id actionView) {
+    Ivar typeIvar = class_getInstanceVariable([actionView class], "type");
+    if (!typeIvar) {
+        return NO;
+    }
 
-- (void)_favoriteAction:(id)sender {
-    if (![BHTSettings boolForKey:@"like_confirm"]) {
+    uint8_t type =
+        *((uint8_t*)(__bridge void*)actionView + ivar_getOffset(typeIvar));
+    return type == 3;
+}
+
+%hook _TtC14T1TwitterSwift21ImmersiveActionButton
+
+- (void)didTapInlineActionButton:(id)button {
+    if (![BHTSettings boolForKey:@"like_confirm"] ||
+        !isImmersiveFavoriteAction(self)) {
+        return %orig;
+    }
+
+    ShowConfirmation(^{
+        %orig;
+    });
+}
+
+%end
+
+%hook _TtC14T1TwitterSwift19ImmersiveActionView
+
+- (void)handleDidTap {
+    if (![BHTSettings boolForKey:@"like_confirm"] ||
+        !isImmersiveFavoriteAction(self)) {
         return %orig;
     }
 

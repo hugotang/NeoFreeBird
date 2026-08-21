@@ -1,17 +1,16 @@
 <div align="center">
     <img src="icon_rounded.png" alt="NeoFreeBird-BHTwitter" width="130" height="130">
 
-  # NeoFreeBird-BHTwitter (tweak)
-  <i>The ultimate way to tweak your Twitter/X experience.</i>
+# NeoFreeBird-BHTwitter (tweak)
+
+<i>The ultimate way to tweak your Twitter/X experience.</i>
+
 </div>
 <br>
 
-> [!WARNING]
-> <b>Please do not create issues regarding sign in or Tweeting.</b><br>Twitter/X have added Attestation to prevent the use of third-paty or modified clients. We cannot do anything against this. Please do not create new issues regarding this.
-
-| | | |
-|:-------------------------:|:-------------------------:|:-------------------------:|
-|<img width="1604" alt="Screenshot 1" src="1.png">|<img width="1604" alt="Screenshot 2" src="2.png">|<img width="1604" alt="Screenshot 3" src="3.png">|
+|                                                   |                                                   |                                                   |
+| :-----------------------------------------------: | :-----------------------------------------------: | :-----------------------------------------------: |
+| <img width="1604" alt="Screenshot 1" src="1.png"> | <img width="1604" alt="Screenshot 2" src="2.png"> | <img width="1604" alt="Screenshot 3" src="3.png"> |
 
 # Compiling NeoFreeBird-BHTwitter
 
@@ -19,34 +18,33 @@
 
 1. Install [Theos](https://github.com/theos/theos).
 
-> Note for Linux users: the current toolchain that ships with Theos is too outdated to build successfully ("Undefined symbols for architecture arm64"). Download the latest toolchain for your distro from [here](https://github.com/L1ghtmann/swift-toolchain-linux/releases/latest) and replace `$THEOS/toolchain/linux` with its contents.
+> Sideloaded and TrollStore builds inject and re-sign with [patina](https://github.com/theacrat/patina), which is downloaded automatically if it isn't in `PATH` (or set `PATINA` to a binary or a local checkout). deb (rootless/rootful) builds don't need it.
 
-2. Install [cyan](https://github.com/asdfzxcvbn/pyzule-rw) if you want sideload or TrollStore builds.
-3. Clone the NeoFreeBird-BHTwitter repository:
+2. Clone the NeoFreeBird-BHTwitter repository:
 
 ```bash
 git clone --recursive https://github.com/NeoFreeBird/tweak
 cd tweak
 ```
 
-4. Make the build script executable:
+3. Run the script with your preferred option:
 
 ```bash
-chmod +x ./build.sh
-```
-
-5. Run the script with your preferred option:
-
-```bash
-./build.sh [OPTIONS]
+./build.py [OPTIONS]
 ```
 
 Available options:
+
 ```
 --sideloaded: for sideloading.
 --trollstore: for TrollStore users.
 --rootless: for rootless jailbreaks.
---rootfull: for rootful jailbreaks.
+--rootful: for rootful jailbreaks.
+(combine them to build several at once, e.g. --sideloaded --trollstore)
+--release: build optimised and stripped, as the workflows do; otherwise builds unoptimised with symbols.
+--clean: wipe previous build output instead of building incrementally.
+--package-only: skip compiling and package the dylibs from a previous build (IPA builds only).
+--rebrand [DIR|ZIP]: rebrand the app from a patina config bundle (IPA builds only).
 --help: for help
 ```
 
@@ -54,83 +52,119 @@ Available options:
 
 1. Fork this repository.
 2. Open the "Actions" tab and enable workflows.
-3. Choose "Build and Release NeoFreeBird-BHTwitter."
-4. Click "Run workflow" and provide:
-   - Deployment format: `rootful`, `rootless`, `sideloaded`, or `trollstore`.
-   - A decrypted IPA URL for sideloaded/TrollStore builds.
-   - Any value for rootful/rootless builds.
-5. Check the "Releases" tab once the build completes.
+3. Run either workflow:
+   - **Build Tweak** builds one format and uploads it as an artifact. Pick a deployment format, and give a decrypted IPA URL for sideloaded and TrollStore builds.
+   - **Release** builds every format, branded and unbranded, and collects them into a draft release. It always needs a decrypted IPA URL.
+4. Take the packages from the run's artifacts, or from the "Releases" tab for a release run.
 
 # Examples
 
 ## Build for Sideloading
 
 1. Get a decrypted IPA for Twitter/X.
-2. Rename it to `com.atebits.Tweetie2.ipa` and move it to the `packages` folder.
+2. Rename it to `base.ipa` and move it to the `packages` folder.
 
 ```bash
-./build.sh --sideloaded
+./build.py --sideloaded
 ```
 
-Result: `NeoFreeBird-sideloaded.ipa` inside `packages`.
+Result: `packages/<tweak>-sideloaded-X_<tweak version>_<app version>.ipa`, named after the tweak in `tweak.json`.
 
 ## Build for TrollStore
 
 Follow the same steps as sideloading, then run:
 
 ```bash
-./build.sh --trollstore
+./build.py --trollstore
 ```
 
-Result: `NeoFreeBird-trollstore.tipa` inside `packages`.
+Result: `packages/<tweak>-trollstore-X_<tweak version>_<app version>.tipa`.
 
 ## Build for Rootless Jailbreaks
 
 Just run:
 
 ```bash
-./build.sh --rootless
+./build.py --rootless
 ```
 
-Result: `com.bandarhl.bhtwitter_4.2_iphoneos-arm64.deb` inside `packages`.
+Result: `packages/<tweak>-rootless_<tweak version>.deb`.
 
 ## Build for Rootful Jailbreaks
 
 Just run:
 
 ```bash
-./build.sh --rootfull
+./build.py --rootful
 ```
 
-Result: `com.bandarhl.bhtwitter_4.2_iphoneos-arm.deb` inside `packages`.
+Result: `packages/<tweak>-rootful_<tweak version>.deb`.
 
-# Rebranding
+# Branding
 
-`rebrand.sh` applies name and icon branding to an IPA. This can be done before or after patching with the tweak.
-
-Resource packs work on both macOS and Linux via [scar](https://github.com/theacrat/scar), which is downloaded automatically if it isn't in `PATH` (or set `NFB_SCAR` to a binary). The Pillow package they need is installed automatically into a cached venv on first use. There is a GitHub Actions workflow if you'd rather not run it locally.
-
+Name and icon branding is applied while building an IPA, and shows up in the output filename:
 
 ```bash
-./rebrand.sh [-t | --twitter-branding] [--resource-pack ZIP] [-o OUTPUT] IPA
+./build.py --sideloaded --rebrand
 ```
 
-At least one branding option is required:
+Result: the same IPA with the bundle's name in place of the app's own, so `...-sideloaded-Twitter_...` rather than `...-sideloaded-X_...`, carrying the name and icons it sets.
+
+The branding lives in a [patina](https://github.com/theacrat/patina) config bundle — a folder (or a zip of it, so it can be hosted) laid out as patina expects:
+
 ```
--t, --twitter-branding: sets the app's display name to Twitter.
---resource-pack ZIP: applies a theme pack ZIP.
+config.json    settings, e.g. the app name
+icon.png       the app icon
+alt-icons/     alternate icons, named after the file
+car/*.png      images swapped inside the app's asset catalogue
+overlay/**     files merged into the app, laid out as they are in the app
 ```
 
-By default the IPA is rebranded in place. Pass `-o`/`--output` to write a rebranded copy instead:
+`--rebrand` uses `patina/` by default; pass a path to use another bundle.
 
-```bash
-./rebrand.sh -t --resource-pack theme.zip -o packages/Twitter-rebranded.ipa packages/NeoFreeBird-sideloaded.ipa
+# Configuring the tweak
+
+`tweak.json` is the only build file to edit. The deb control and the Substrate filter plist are generated from it, so neither is in the repo, and the Makefile takes every setting from it through the environment.
+
+Top-level keys become deb control fields. `filter.bundles` is the app the tweak loads into, and `build` holds the compile settings:
+
+```
+archs, sdk_version, target_version    what to build for
+subprojects, sideload_subprojects     Theos projects under deps/, the latter
+                                      built for sideloading but never packaged
+frameworks, private_frameworks, extra_frameworks
+obj_files, cflags
 ```
 
-> [!NOTE]
-> <b>These builds are considered beta</b><br>This repo is meant for NeoFreeBird, which builds this for specific versions of Twitter. You can of course build this for your own app without using the main NeoFreeBird app, but please note your build will not be supported by the NeoFreeBird team if you do.
+Resources go in `bundle/`, installed as `<name>/<name>.bundle` under Application Support and reachable from the app as `TWEAK_NAME_STRING`.
 
+A dependency is a name plus where to get it, so sideloaded and TrollStore builds can carry what a jailbreak would install:
 
-> [!NOTE]
-> <b>This repo is forked from BHTwitter.</b><br>It will merge patches upstream to BHTwitter when it's considered mostly done.
+```json
+{
+  "name": "ws.hbang.common",
+  "url": "https://github.com/hbang/libcephei/releases/download/2.0/ws.hbang.common_2.0_iphoneos-arm64.deb"
+}
+```
 
+Use `path` instead of `url` for a local `.deb` (relative to the repo). Setting both takes the local one, which is how a package you built yourself is tested in place of the published one. A plain string declares a dependency without bundling it.
+
+# Translating
+
+Every language lives in `bundle/strings.json`, one entry per string key with a value per language:
+
+```json
+{
+  "Localizable": {
+    "MODERN_SETTINGS_LAYOUT_TITLE": {
+      "en": "General",
+      "de": "Allgemein",
+      "fr": "Général"
+    }
+  }
+}
+```
+
+`build.py` writes each table into `<name>.bundle/Localizations.bundle/<language>.lproj/<table>.strings` as it stages the bundle, so there are no `.lproj` folders to edit. `Localizable` is Cocoa's default table and holds the interface strings, setting the languages the tweak ships: a key missing one falls back to English, and the build says which. Every other table is optional and strictly per-language, never falling back — `RenameWords` and `RenameOverrides` are two, driving the "Restore Twitter names" feature.
+
+`strings.schema.json` completes language codes and flags typos and empty values as you type. It lists the ISO 639-1 designators plus the script and region variants iOS resolves; iOS takes any BCP 47 designator, so add one there if you need it. Neither file is shipped.

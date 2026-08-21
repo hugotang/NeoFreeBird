@@ -85,44 +85,12 @@
 @property (nonatomic, strong) TFNTwitterAccount* account;
 @end
 
-@interface T1SettingsViewController : TFNItemsDataViewController
-@property (nonatomic, strong) TFNTwitterAccount* account;
-@end
-
-#pragma mark - Profile
-
-@interface T1ProfileActionButtonSpec : NSObject
-- (instancetype)initWithPosition:(NSUInteger)position
-                        priority:(NSUInteger)priority
-                 visibilityBlock:(BOOL (^)(double))visibilityBlock
-             buttonCreationBlock:(UIView* (^)(void))buttonCreationBlock;
-@end
-
-@interface T1ProfileUserViewModel : NSObject
-@property (readonly, copy, nonatomic) NSString* location;
-@property (readonly, copy, nonatomic) NSString* fullName;
-@property (readonly, copy, nonatomic) NSString* username;
-@property (readonly, copy, nonatomic) NSString* bio;
-@property (readonly, copy, nonatomic) NSString* url;
-@end
-
-@interface T1ProfileHeaderViewController : UIViewController
-@property (retain, nonatomic) T1ProfileUserViewModel* viewModel;
-@end
-
 #pragma mark - Status views
 
-@protocol T1StatusInlineActionButtonDelegate <NSObject>
-@end
 @protocol TTAStatusInlineActionButtonDelegate <NSObject>
 @end
 
 @interface TTAStatusInlineShareButton : UIView
-@property (nonatomic) __weak id<T1StatusInlineActionButtonDelegate> delegate;
-@end
-
-@interface TTAStatusInlineReplyButton : UIView
-@property (nonatomic) __weak id<T1StatusInlineActionButtonDelegate> delegate;
 @end
 
 @interface T1PersistentComposeViewController : UIViewController
@@ -130,15 +98,6 @@
 @end
 
 @protocol TTACoreStatusViewEventHandler <NSObject>
-@end
-
-@interface T1StatusCell : UITableViewCell <TTACoreStatusViewEventHandler>
-@end
-
-@interface T1StatusInlineActionsView
-    : UIView <T1StatusInlineActionButtonDelegate>
-@property (readonly, nonatomic) id viewModel;
-@property (nonatomic) id delegate;
 @end
 
 @interface TTAStatusInlineActionsView
@@ -149,18 +108,6 @@
 
 @interface T1StandardStatusView : UIView
 @property (nonatomic) __weak id<TTACoreStatusViewEventHandler> eventHandler;
-@property (readonly, nonatomic) UIView* visibleInlineActionsView;
-@end
-
-@interface T1TweetDetailsFocalStatusView : UIView
-@property (nonatomic) __weak id<TTACoreStatusViewEventHandler> eventHandler;
-@end
-
-@interface T1ConversationFocalStatusView : UIView
-@property (nonatomic) __weak id<TTACoreStatusViewEventHandler> eventHandler;
-- (void)layoutSubviews;
-@property (nonatomic, readonly) id viewModel;
-- (void)enumerateSubviewsRecursively:(void (^)(UIView*))block;
 @end
 
 @interface T1TweetComposeViewController : UIViewController
@@ -194,11 +141,7 @@
 @end
 
 @interface T1BaseWebViewController : UIViewController
-- (instancetype)initWithURL:(NSURL*)url;
-- (instancetype)initWithAccount:(id)account;
-- (void)setRootURL:(NSURL*)url;
 - (void)setCurrentURL:(NSURL*)url;
-@property (nonatomic, readonly) NSURL* currentURL;
 - (WKWebView*)webView;
 @end
 
@@ -220,17 +163,15 @@
 
 #pragma mark - Status & timeline text
 
-@interface T1StatusBodyTextView : UIView
-@property (readonly, nonatomic) id viewModel;
-@end
-
-@interface _TtC10TwitterURT25URTTimelineTrendViewModel : NSObject
-@property (nonatomic, readonly) NSDictionary* scribeItem;
-@end
-
-@interface T1ConversationFooterTextView : TFNAttributedTextView
+@interface T1ConversationFooterTextView : UIView
 @property (nonatomic, readonly) id viewModel;
 - (void)updateFooterTextView;
+@end
+
+// Hooked for selectable profile text
+@interface T1ProfileUserInfoView : UIView
+@property (nonatomic, readonly) UIButton* locationButton;
+@property (nonatomic, getter=isBioExpanded) BOOL bioExpanded;
 @end
 
 // Hooked for unrounded follower/following counts
@@ -239,4 +180,11 @@
                      singularLabel:(id)arg2
                              count:(id)arg3
                        highlighted:(_Bool)arg4;
+@end
+
+#pragma mark - Settings
+
+@interface T1SubtitledSettingsItem : TFNGenericItem
+@property (nonatomic, copy) NSString* title;
+@property (nonatomic, copy) NSString* subtitle;
 @end

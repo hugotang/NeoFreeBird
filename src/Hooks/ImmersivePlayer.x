@@ -4,162 +4,121 @@
 //
 
 #import "HookHelpers.h"
-#import <string.h>
 
 // MARK: - Immersive Player Timestamp
 
-static const uint8_t* immersiveCardStateMetadata(void) {
-    static const uint8_t* metadata;
+// The progress label is native-visible only for landscape video; the hook
+// below re-applies Twitter's own visibility rule minus that orientation gate.
+// Field offsets and enum tags are resolved by name (Core/SwiftMetadata.h), so
+// a reshuffled layout in an app update fails closed (the feature no-ops)
+// instead of misreading state.
+
+typedef struct {
+    int32_t displayModeOffset;
+    int32_t isDismissingOffset;
+    int32_t isChromeFadedOffset;
+    const void* optionalStateMetadata;
+    const void* displayModeMetadata;
+    SwiftEnumTagGetter optionalStateEnumTag;
+    SwiftEnumTagGetter displayModeEnumTag;
+    unsigned tagRegular;
+    unsigned tagScrubbing;
+    unsigned tagStatusExpanded;
+    BOOL valid;
+} CardStateLayout;
+
+static const CardStateLayout* cardStateLayout(void) {
+    static CardStateLayout layout;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        const void* (*getType)(const char*, size_t, const void*,
-                               const void* const*) =
-            dlsym(RTLD_DEFAULT, "swift_getTypeByMangledNameInEnvironment");
-        if (getType) {
-            const char* mangledName = "14T1TwitterSwift18ImmersiveCardStateV";
-            metadata = getType(mangledName, strlen(mangledName), NULL, NULL);
+        const void* stateMetadata = SwiftTypeMetadataForMangledName(
+            "14T1TwitterSwift18ImmersiveCardStateV");
+        const void* optionalMetadata = SwiftTypeMetadataForMangledName(
+            "14T1TwitterSwift18ImmersiveCardStateVSg");
+        const void* modeMetadata = SwiftTypeMetadataForMangledName(
+            "14T1TwitterSwift20ImmersiveDisplayModeO");
+        if (!stateMetadata || !optionalMetadata || !modeMetadata) {
+            NSLog(@"[NeoFreeBird] immersive card state types missing; video "
+                  @"timestamp restore disabled");
+            return;
         }
+
+        layout.displayModeOffset =
+            SwiftFieldOffsetForName(stateMetadata, "displayMode");
+        layout.isDismissingOffset =
+            SwiftFieldOffsetForName(stateMetadata, "isDismissing");
+        layout.isChromeFadedOffset =
+            SwiftFieldOffsetForName(stateMetadata, "isChromeFadedOutWhilePanning");
+
+        int regular = SwiftEnumTagForCase(modeMetadata, "regular");
+        int scrubbing = SwiftEnumTagForCase(modeMetadata, "scrubbing");
+        int statusExpanded = SwiftEnumTagForCase(modeMetadata, "statusExpanded");
+
+        layout.optionalStateMetadata = optionalMetadata;
+        layout.displayModeMetadata = modeMetadata;
+        layout.optionalStateEnumTag =
+            SwiftEnumTagGetterForMetadata(optionalMetadata);
+        layout.displayModeEnumTag = SwiftEnumTagGetterForMetadata(modeMetadata);
+
+        if (layout.displayModeOffset < 0 || layout.isDismissingOffset < 0 ||
+            layout.isChromeFadedOffset < 0 || regular < 0 || scrubbing < 0 ||
+            statusExpanded < 0 || !layout.optionalStateEnumTag ||
+            !layout.displayModeEnumTag) {
+            NSLog(@"[NeoFreeBird] immersive card state layout lookup failed; "
+                  @"video timestamp restore disabled");
+            return;
+        }
+
+        layout.tagRegular = (unsigned)regular;
+        layout.tagScrubbing = (unsigned)scrubbing;
+        layout.tagStatusExpanded = (unsigned)statusExpanded;
+        layout.valid = YES;
     });
-    return metadata;
+    return layout.valid ? &layout : NULL;
 }
 
-static const uint8_t* immersiveCardStateDescriptor(void) {
-    const uint8_t* metadata = immersiveCardStateMetadata();
-    return metadata ? *(const uint8_t* const*)(metadata + 8) : NULL;
-}
-
-// Swift field records contain relative pointers to their reflection names.
-// Resolve by name because 12.14 inserted a state field before these flags,
-// shifting their declaration indexes from the 12.3 layout.
-static BOOL cardStateFieldIndexNamed(const char* fieldName,
-                                     uint32_t* outIndex) {
-    const uint8_t* descriptor = immersiveCardStateDescriptor();
-    if (!descriptor || !fieldName || !outIndex) {
+static BOOL restoredProgressLabelAlpha(id pluginView, CGFloat* outAlpha) {
+    const CardStateLayout* layout = cardStateLayout();
+    if (!layout) {
         return NO;
     }
 
-    uint32_t numFields = *(const uint32_t*)(descriptor + 20);
-    const int32_t* fieldDescriptorOffset =
-        (const int32_t*)(descriptor + 16);
-    if (numFields == 0 || numFields > 256 ||
-        *fieldDescriptorOffset == 0) {
-        return NO;
-    }
-
-    const uint8_t* fieldDescriptor =
-        (const uint8_t*)fieldDescriptorOffset + *fieldDescriptorOffset;
-    uint16_t recordSize = *(const uint16_t*)(fieldDescriptor + 10);
-    uint32_t recordCount = *(const uint32_t*)(fieldDescriptor + 12);
-    if (recordSize < 12 || recordSize > 64 || recordCount != numFields) {
-        return NO;
-    }
-
-    for (uint32_t index = 0; index < recordCount; index++) {
-        const uint8_t* record = fieldDescriptor + 16 + index * recordSize;
-        const int32_t* nameOffset = (const int32_t*)(record + 8);
-        if (*nameOffset == 0) {
-            continue;
-        }
-
-        const char* name = (const char*)nameOffset + *nameOffset;
-        if (strcmp(name, fieldName) == 0) {
-            *outIndex = index;
-            return YES;
-        }
-    }
-
-    return NO;
-}
-
-static BOOL cardStateVisibilityFieldIndexes(uint32_t* outPanningIndex,
-                                            uint32_t* outChromeFadedIndex) {
-    static dispatch_once_t onceToken;
-    static BOOL resolved;
-    static uint32_t panningIndex;
-    static uint32_t chromeFadedIndex;
-    dispatch_once(&onceToken, ^{
-        resolved =
-            cardStateFieldIndexNamed("isPanningBetweenCards", &panningIndex) &&
-            cardStateFieldIndexNamed("isChromeFadedOutWhilePanning",
-                                     &chromeFadedIndex);
-    });
-
-    if (!resolved) {
-        return NO;
-    }
-
-    *outPanningIndex = panningIndex;
-    *outChromeFadedIndex = chromeFadedIndex;
-    return YES;
-}
-
-// Reads a Bool field through the struct's field offset vector, the same way the
-// app's own compiled accesses do, so byte offsets never have to be hardcoded.
-static BOOL cardStateBoolField(const uint8_t* state,
-                               uint32_t fieldIndex,
-                               BOOL* outValue) {
-    const uint8_t* metadata = immersiveCardStateMetadata();
-    const uint8_t* descriptor = immersiveCardStateDescriptor();
-    if (!metadata || !descriptor) {
-        return NO;
-    }
-
-    uint32_t numFields = *(const uint32_t*)(descriptor + 20);
-    uint32_t offsetVectorOffset = *(const uint32_t*)(descriptor + 24);
-    if (fieldIndex >= numFields || offsetVectorOffset == 0) {
-        return NO;
-    }
-
-    const int32_t* fieldOffsets =
-        (const int32_t*)(metadata + offsetVectorOffset * sizeof(void*));
-    *outValue = state[fieldOffsets[fieldIndex]] & 1;
-    return YES;
-}
-
-// displayMode is a Swift enum stored as an 8-byte case index followed by a
-// discriminator tag (0 = the repliesPanning payload case, 1 = an empty case).
-// Empty cases: regular = 0, repliesOpen = 1, repliesCompletelyOpen = 2,
-// controlsHidden = 3, scrubbing = 4, statusExpanded = 5.
-static BOOL progressLabelAlphaFromState(id pluginView, CGFloat* outAlpha) {
     Ivar stateIvar = class_getInstanceVariable([pluginView class], "state");
     if (!stateIvar) {
         return NO;
     }
+    const uint8_t* state =
+        (const uint8_t*)(__bridge void*)pluginView + ivar_getOffset(stateIvar);
 
-    uint8_t* state =
-        (uint8_t*)(__bridge void*)pluginView + ivar_getOffset(stateIvar);
-    uint64_t displayModeCase = *(uint64_t*)state;
-    uint8_t displayModeTag = state[8];
-
-    BOOL visible =
-        displayModeTag == 1 && (displayModeCase < 1 || displayModeCase > 3);
-
-    uint32_t panningIndex = 0;
-    uint32_t chromeFadedIndex = 0;
-    if (visible && cardStateVisibilityFieldIndexes(&panningIndex,
-                                                   &chromeFadedIndex)) {
-        BOOL panning = NO, chromeFaded = NO;
-        if (cardStateBoolField(state, panningIndex, &panning) &&
-            panning) {
-            visible = NO;
-        } else if (cardStateBoolField(state, chromeFadedIndex,
-                                      &chromeFaded) &&
-                   chromeFaded) {
-            visible = NO;
-        }
+    // The ivar is Optional<ImmersiveCardState>; tag 0 is .some.
+    if (layout->optionalStateEnumTag(state, layout->optionalStateMetadata) != 0) {
+        return NO;
     }
 
-    *outAlpha = visible ? 1.0 : 0.0;
+    unsigned mode = layout->displayModeEnumTag(
+        state + layout->displayModeOffset, layout->displayModeMetadata);
+    BOOL visible = (mode == layout->tagRegular ||
+                    mode == layout->tagScrubbing ||
+                    mode == layout->tagStatusExpanded) &&
+                   !(state[layout->isDismissingOffset] & 1);
+
+    if (!visible) {
+        *outAlpha = 0.0;
+    } else if (state[layout->isChromeFadedOffset] & 1) {
+        *outAlpha = 0.4;
+    } else {
+        *outAlpha = 1.0;
+    }
     return YES;
 }
 
 %hook _TtC14T1TwitterSwift32ImmersiveProgressLabelPluginView
 
 - (void)setAlpha:(CGFloat)alpha {
-    if ([BHTSettings boolForKey:@"restore_video_timestamp"]) {
-        CGFloat stateAlpha;
-        if (progressLabelAlphaFromState(self, &stateAlpha)) {
-            alpha = stateAlpha;
+    if (alpha == 0.0 && [BHTSettings boolForKey:@"restore_video_timestamp"]) {
+        CGFloat restored;
+        if (restoredProgressLabelAlpha(self, &restored)) {
+            alpha = restored;
         }
     }
 
@@ -170,34 +129,18 @@ static BOOL progressLabelAlphaFromState(id pluginView, CGFloat* outAlpha) {
 
 // MARK: - Disable Immersive Feed Scrolling
 
-// The card pan drives vertical paging between videos; blocking it lets the
-// swipe-down dismiss gesture take over.
-static BOOL isImmersiveCardPan(id viewController,
-                               UIGestureRecognizer* gesture) {
-    Ivar panIvar =
-        class_getInstanceVariable([viewController class], "panRecognizer");
-    return panIvar && object_getIvar(viewController, panIvar) == gesture;
-}
-
 %hook T1ImmersiveViewController
 
+// The card pan drives vertical paging between videos; blocking it lets the
+// swipe-down dismiss gesture take over. The pan is a Swift lazy stored
+// property, so its ivar is name-mangled.
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer*)gesture {
-    if ([BHTSettings boolForKey:@"disable_immersive_scroll"] &&
-        isImmersiveCardPan(self, gesture)) {
-        return NO;
-    }
-
-    return %orig;
-}
-
-%end
-
-%hook T1ImmersiveViewControllerV2
-
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer*)gesture {
-    if ([BHTSettings boolForKey:@"disable_immersive_scroll"] &&
-        isImmersiveCardPan(self, gesture)) {
-        return NO;
+    if ([BHTSettings boolForKey:@"disable_immersive_scroll"]) {
+        Ivar panIvar = class_getInstanceVariable(
+            object_getClass(self), "$__lazy_storage_$_panRecognizer");
+        if (panIvar && object_getIvar(self, panIvar) == gesture) {
+            return NO;
+        }
     }
 
     return %orig;

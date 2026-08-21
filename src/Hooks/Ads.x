@@ -66,8 +66,8 @@ static BOOL ShouldHideItem(id item, NSString* location) {
     }
 
     if ([BHTSettings boolForKey:@"hide_premium_offer"]) {
-        if ([className
-                isEqualToString:@"TwitterURT.URTTimelineMessageItemViewModel"]) {
+        if ([item isKindOfClass:objc_getClass(
+                                   "T1URTTimelineMessageItemViewModel")]) {
             return YES;
         }
     }

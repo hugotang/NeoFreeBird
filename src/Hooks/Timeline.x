@@ -103,6 +103,21 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 
 %end
 
+// MARK: - Following tab defaults to Latest
+
+%hook TFSAccountUserDefaults
+
+- (id)objectForKey:(NSString*)key {
+    id value = %orig;
+    if (!value && [key isKindOfClass:[NSString class]] &&
+        [key isEqualToString:@"ranked_following_selected"]) {
+        return @NO;
+    }
+    return value;
+}
+
+%end
+
 // MARK: - Force tweet images to full frame
 
 %hook T1StandardStatusAttachmentViewAdapter

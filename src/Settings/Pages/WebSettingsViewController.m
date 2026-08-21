@@ -15,31 +15,6 @@
     return @"web";
 }
 
-// Mirrors the base implementation, but includes the indexPath in the payload so
-// the row can be reloaded after saving.
-- (void)tableView:(UITableView*)tableView didSelectRowAtIndexPath:(NSIndexPath*)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    NSDictionary* data = self.visibleToggles[indexPath.row];
-
-    if ([data[@"type"] isEqualToString:@"button"] ||
-        [data[@"type"] isEqualToString:@"compactButton"]) {
-        NSString* actionName = data[@"action"];
-        if (actionName) {
-            SEL action = NSSelectorFromString(actionName);
-            if ([self respondsToSelector:action]) {
-                NSMutableDictionary* payload = [data mutableCopy];
-                payload[@"indexPath"] = indexPath;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-                [self performSelector:action
-                           withObject:payload];
-#pragma clang diagnostic pop
-            }
-        }
-    }
-}
-
 // Reduces user input like "https://fxtwitter.com/" to a bare host, so the
 // value can be assigned straight to NSURLComponents.host when rewriting.
 - (NSString*)sharingDomainFromInput:(NSString*)input {
@@ -98,12 +73,7 @@
                                       [defaults removeObjectForKey:@"sharing_domain"];
                                   }
                                   [defaults synchronize];
-
-                                  NSIndexPath* indexPath = data[@"indexPath"];
-                                  if (indexPath) {
-                                      [self.tableView reloadRowsAtIndexPaths:@[indexPath]
-                                                            withRowAnimation:UITableViewRowAnimationNone];
-                                  }
+                                  [self setNeedsUpdate:YES];
                               }]];
 
     [self presentViewController:alert animated:YES completion:nil];
