@@ -108,4 +108,5 @@ jobs:
           name: ${{ steps.build.outputs.package }}
           path: ${{ github.workspace }}/main/packages/${{ steps.build.outputs.package }}
           archive: false
+          retention-days: 1
           if-no-files-found: error
