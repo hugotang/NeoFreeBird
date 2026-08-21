@@ -284,6 +284,11 @@
 "INSTALL_IFONT_BUTTON_TITLE" = "iFont App";
 "FONT_SYSTEM_DEFAULT_SUBTITLE" = "系統預設";
 
+/*Native login*/
+"LOGIN_SIGNING_IN" = "Signing in…";
+"LOGIN_SIGNED_IN" = "Signed in";
+"LOGIN_ACCOUNT_EXISTS" = "You're already signed in to this account.";
+
 /*Legacy login*/
 "LEGACY_LOGIN_INFO_LABEL" = "使用使用者名稱和密碼登入。\n\n不支援使用 Google 或 Apple 登入。如果你的帳號使用其中一種方式，請先為帳號新增密碼。";
 "LEGACY_LOGIN_MISSING_INPUT_TITLE" = "缺少輸入內容";

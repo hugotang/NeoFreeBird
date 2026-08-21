@@ -284,6 +284,11 @@
 "INSTALL_IFONT_BUTTON_TITLE" = "iFont uygulaması";
 "FONT_SYSTEM_DEFAULT_SUBTITLE" = "Sistem Varsayılanı";
 
+/*Native login*/
+"LOGIN_SIGNING_IN" = "Signing in…";
+"LOGIN_SIGNED_IN" = "Signed in";
+"LOGIN_ACCOUNT_EXISTS" = "You're already signed in to this account.";
+
 /*Legacy login*/
 "LEGACY_LOGIN_INFO_LABEL" = "Kullanıcı adınız ve şifrenizle giriş yapın.\n\nGoogle ve Apple ile giriş desteklenmez. Hesabınız bunlardan birini kullanıyorsa önce hesabınıza bir şifre ekleyin.";
 "LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Eksik bilgi";

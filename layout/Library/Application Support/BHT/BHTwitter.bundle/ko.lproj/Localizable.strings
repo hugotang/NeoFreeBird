@@ -284,6 +284,11 @@
 "INSTALL_IFONT_BUTTON_TITLE" = "iFont 앱";
 "FONT_SYSTEM_DEFAULT_SUBTITLE" = "시스템 기본값";
 
+/*Native login*/
+"LOGIN_SIGNING_IN" = "Signing in…";
+"LOGIN_SIGNED_IN" = "Signed in";
+"LOGIN_ACCOUNT_EXISTS" = "You're already signed in to this account.";
+
 /*Legacy login*/
 "LEGACY_LOGIN_INFO_LABEL" = "사용자 이름과 비밀번호로 로그인하세요.\n\nGoogle 및 Apple 로그인은 지원되지 않습니다. 해당 방식으로 만든 계정은 먼저 비밀번호를 추가하세요.";
 "LEGACY_LOGIN_MISSING_INPUT_TITLE" = "입력 누락";

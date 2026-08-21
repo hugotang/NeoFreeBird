@@ -284,6 +284,11 @@
 "INSTALL_IFONT_BUTTON_TITLE" = "Aplikacja iFont";
 "FONT_SYSTEM_DEFAULT_SUBTITLE" = "Domyślne systemowe";
 
+/*Native login*/
+"LOGIN_SIGNING_IN" = "Signing in…";
+"LOGIN_SIGNED_IN" = "Signed in";
+"LOGIN_ACCOUNT_EXISTS" = "You're already signed in to this account.";
+
 /*Legacy login*/
 "LEGACY_LOGIN_INFO_LABEL" = "Zaloguj się przy użyciu nazwy użytkownika i hasła.\n\nLogowanie przez Google i Apple nie jest obsługiwane. Jeśli Twoje konto używa jednej z tych metod, najpierw dodaj do niego hasło.";
 "LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Brakujące dane";

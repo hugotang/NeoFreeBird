@@ -284,6 +284,11 @@
 "INSTALL_IFONT_BUTTON_TITLE" = "Aplicación iFont";
 "FONT_SYSTEM_DEFAULT_SUBTITLE" = "Predeterminado del sistema";
 
+/*Native login*/
+"LOGIN_SIGNING_IN" = "Signing in…";
+"LOGIN_SIGNED_IN" = "Signed in";
+"LOGIN_ACCOUNT_EXISTS" = "You're already signed in to this account.";
+
 /*Legacy login*/
 "LEGACY_LOGIN_INFO_LABEL" = "Inicia sesión con tu nombre de usuario y contraseña.\n\nNo se admite el inicio de sesión con Google ni Apple. Si tu cuenta usa uno de ellos, añade primero una contraseña.";
 "LEGACY_LOGIN_MISSING_INPUT_TITLE" = "Faltan datos";
