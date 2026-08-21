@@ -29,6 +29,22 @@ runs:
       shell: bash
       run: curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz | tar -xJf - -C theos/toolchain/
 
+    - name: Add ranlib compatibility alias
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        TOOLCHAIN="$GITHUB_WORKSPACE/theos/toolchain/linux/iphone/bin"
+        RANLIB="$TOOLCHAIN/ranlib"
+        TARGET_RANLIB="$TOOLCHAIN/aarch64-apple-darwin14-ranlib"
+
+        test -x "$RANLIB"
+        if [[ ! -e "$TARGET_RANLIB" && ! -L "$TARGET_RANLIB" ]]; then
+          ln -s "ranlib" "$TARGET_RANLIB"
+        fi
+        test -x "$TARGET_RANLIB"
+        ls -l "$RANLIB" "$TARGET_RANLIB"
+
     - name: iOS SDK Caching
       id: sdk
       uses: actions/cache@v6
