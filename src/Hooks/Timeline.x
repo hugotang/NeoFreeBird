@@ -7,7 +7,7 @@
 
 // MARK: - Hide custom timelines
 
-static __weak NSObject* PinnedTimelinesRepository;
+static __weak id PinnedTimelinesRepository;
 static NSArray* LastPinnedTimelineModels;
 static BOOL PinnedTimelinesWriteBypass = NO;
 
@@ -16,7 +16,7 @@ static BOOL PinnedTimelinesWriteBypass = NO;
 // anything else would unpin for real; the delegate hook below swaps in the
 // empty list on the way through.
 void applyHideCustomTimelinesSetting(void) {
-    NSObject* repository = PinnedTimelinesRepository;
+    id repository = PinnedTimelinesRepository;
     if (!repository) {
         return;
     }
@@ -31,6 +31,9 @@ void applyHideCustomTimelinesSetting(void) {
     } else if ([repository respondsToSelector:@selector(fetchPinnedTimelinesWithThrottleEnabled:)]) {
         ((void (*)(id, SEL, BOOL))objc_msgSend)(
             repository, @selector(fetchPinnedTimelinesWithThrottleEnabled:), NO);
+    } else if ([repository respondsToSelector:@selector(loadInitialPinnedTimelines)]) {
+        ((void (*)(id, SEL))objc_msgSend)(repository,
+                                          @selector(loadInitialPinnedTimelines));
     }
 }
 
@@ -85,6 +88,98 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
     SyncHomeAddTabButton(self, [BHTSettings boolForKey:@"hide_custom_timelines"]);
+}
+
+%end
+
+// v12.19.1 exposes the home feature values through an Objective-C facade whose
+// Swift getters no longer pass through TFSFeatureSwitches. Keep the direct
+// accessors consistent with FeatureSwitchOverrideValueForKey().
+%hook TwitterHomeFeatures
+
+- (BOOL)isHomeTimelineNonStickyTabOnNewSessionEnabled {
+    return NO;
+}
+
+- (BOOL)isHomeTimelineStickyPinnedTabEnabled {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? NO : YES;
+}
+
+- (BOOL)isHomeTimelinesGenericPinnedTimelinesEnabled {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? NO : YES;
+}
+
+- (BOOL)isHomeTimelineSuperFollowsSubscriptionsTabStickyEnabled {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? NO : YES;
+}
+
+- (BOOL)isPinnedTabsTopicsEnabled {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? NO : YES;
+}
+
+- (NSInteger)pinnedTabsManagementTopicsInlineLimit {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? 0 : 100;
+}
+
+- (NSInteger)pinnedTabsManagementPinnedSectionInlineLimit {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? 0 : 100;
+}
+
+- (NSInteger)pinnedTabsLimit {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? 0 : 100;
+}
+
+- (BOOL)isPinnedTabsPinnedTrailingAccessoryEnabled {
+    return [BHTSettings boolForKey:@"hide_custom_timelines"] ? NO : %orig;
+}
+
+%end
+
+// The pinned-timelines repository is now held by this coordinator instead of
+// the old HomeTimelineContainerViewController. Capture it for live setting
+// changes, while the existing repository guard keeps the persisted list
+// untouched when that implementation is present.
+%hook T1HomeTimelineVariantCoordinator
+
+- (id)pinnedTimelinesRepository {
+    id repository = %orig;
+    if (repository) {
+        PinnedTimelinesRepository = repository;
+    }
+    return repository;
+}
+
+%end
+
+// The home container is reached through T1TimelineNavigationController in
+// v12.19.1. Sync the trailing accessory whenever the navigation controller
+// resolves its content, regardless of the concrete Swift container class.
+%hook T1TimelineNavigationController
+
+- (id)primaryContentViewController {
+    id content = %orig;
+    BOOL hide = [BHTSettings boolForKey:@"hide_custom_timelines"];
+    SyncHomeAddTabButton(self, hide);
+    SyncHomeAddTabButton(content, hide);
+    return content;
+}
+
+- (id)activeContentViewController {
+    id content = %orig;
+    BOOL hide = [BHTSettings boolForKey:@"hide_custom_timelines"];
+    SyncHomeAddTabButton(self, hide);
+    SyncHomeAddTabButton(content, hide);
+    return content;
+}
+
+%end
+
+%hook T1HomeTimelineAppNavigationTabEntry
+
+- (void)homeTimelineDidUpdate:(id)notification {
+    %orig;
+    SyncHomeAddTabButton([self rootTabViewController],
+                         [BHTSettings boolForKey:@"hide_custom_timelines"]);
 }
 
 %end

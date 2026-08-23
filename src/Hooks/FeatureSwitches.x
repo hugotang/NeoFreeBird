@@ -531,6 +531,53 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
 
 %end
 
+// v12.19.1 uses the Twitter platform facade for the feature-switch access
+// protocol. Its typed getters bypass the older TFSFeatureSwitches classes, so
+// mirror the same overrides here as well.
+
+%hook TPSTwitterFeatureSwitches
+
+- (BOOL)boolForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ? override.boolValue : %orig;
+}
+
+- (NSString*)stringForKey:(NSString*)key {
+    NSString* override = FeatureSwitchStringOverrideForKey(key);
+    return override ?: %orig;
+}
+
+- (NSInteger)integerForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ? override.integerValue : %orig;
+}
+
+- (NSNumber*)numberForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ?: %orig;
+}
+
+- (id)rawValueForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ?: %orig;
+}
+
+- (BOOL)unsafePeekBoolForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ? override.boolValue : %orig;
+}
+
+- (NSInteger)unsafePeekIntegerForKey:(NSString*)key {
+    NSNumber* override = FeatureSwitchOverrideValueForKey(key);
+    return override ? override.integerValue : %orig;
+}
+
+- (BOOL)hasNonDefaultValueForKey:(NSString*)key {
+    return FeatureSwitchOverrideValueForKey(key) ? YES : %orig;
+}
+
+%end
+
 // XChat reads its switches from its own store rather than TFSFeatureSwitches,
 // so the xchat_ keys need the same treatment here.
 

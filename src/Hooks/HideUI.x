@@ -40,6 +40,18 @@ static BOOL IsHiddenBlueCheckmark(NSString* imageName) {
 
 %end
 
+// T1SearchFeatures bypasses the datastore when it decides how many recent
+// searches the search UI may retain. Returning zero closes that v12.19.1 path
+// as well as the datastore read/write hooks above.
+
+%hook T1SearchFeatures
+
+- (NSUInteger)maximumNumberOfRecentSearches {
+    return [BHTSettings boolForKey:@"no_history"] ? 0 : %orig;
+}
+
+%end
+
 // MARK: - Hide trending content on the Explore tab
 
 // Trending content lives in the child URT chrome view controller, whose
