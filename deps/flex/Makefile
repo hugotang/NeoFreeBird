@@ -6,6 +6,9 @@ include $(THEOS)/makefiles/common.mk
 FLEX_ROOT := upstream
 
 SOURCES := $(shell find $(FLEX_ROOT)/Classes \( -name '*.c' -o -name '*.m' -o -name '*.mm' \))
+# FLEX is linked as its own dylib, so it needs the availability runtime
+# fallback independently of the main tweak target.
+SOURCES += ../../src/Core/Availability.m
 IMPORTS := $(addprefix -I,$(shell find $(FLEX_ROOT)/Classes -type d))
 
 TWEAK_NAME := libbhFLEX
