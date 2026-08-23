@@ -178,7 +178,9 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 
 - (void)homeTimelineDidUpdate:(id)notification {
     %orig;
-    SyncHomeAddTabButton([self rootTabViewController],
+    id rootViewController =
+        ((id (*)(id, SEL))objc_msgSend)(self, @selector(rootTabViewController));
+    SyncHomeAddTabButton(rootViewController,
                          [BHTSettings boolForKey:@"hide_custom_timelines"]);
 }
 
