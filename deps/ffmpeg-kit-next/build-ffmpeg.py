@@ -86,9 +86,20 @@ def toolchain():
 
     bin_dir = theos / "toolchain/linux/iphone/bin"
     if (bin_dir / "clang").is_file():
+        # The Linux iOS toolchain ships legacy cctools-compatible ar/ranlib
+        # binaries that try to exec a target-prefixed ranlib which is not
+        # included in recent releases. LLVM's archive tools handle Darwin
+        # archives directly and do not depend on that missing sibling.
+        def tool(llvm_name, legacy_name):
+            candidate = bin_dir / llvm_name
+            return str(candidate if candidate.is_file() else bin_dir / legacy_name)
+
         tools = {
-            name: str(bin_dir / name)
-            for name in ("clang", "clang++", "ar", "ranlib", "nm")
+            "clang": str(bin_dir / "clang"),
+            "clang++": str(bin_dir / "clang++"),
+            "ar": tool("llvm-ar", "ar"),
+            "ranlib": tool("llvm-ranlib", "ranlib"),
+            "nm": tool("llvm-nm", "nm"),
         }
     else:
         tools = {
