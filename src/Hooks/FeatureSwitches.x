@@ -684,6 +684,17 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
 
 %end
 
+// The immersive timeline has a typed gate that reads `ssp_ads_immersive`
+// directly from T1TimelineFeatures, bypassing the keyed switch classes above.
+// Keep the request and the client-side item builder on the same ad-free path.
+%hook T1TimelineFeatures
+
+- (BOOL)isImmersiveSSPEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+%end
+
 // MARK: - Account feature gates
 
 %hook TFNTwitterAccount
