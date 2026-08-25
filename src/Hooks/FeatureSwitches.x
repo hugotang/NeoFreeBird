@@ -208,6 +208,13 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return @(![BHTSettings boolForKey:@"reply_sorting"]);
     }
 
+    // v12.19.1 split the delayed likes-sort gate into a separate key. Keep it
+    // disabled when the user turns off reply sorting; otherwise leave the
+    // server-provided value untouched.
+    if ([key isEqualToString:@"reply_sort_by_likes_delayed_enabled"]) {
+        return [BHTSettings boolForKey:@"reply_sorting"] ? nil : @NO;
+    }
+
     if ([key
             isEqualToString:@"ios_tweet_detail_overflow_in_navigation_enabled"]) {
         return @NO;
@@ -688,6 +695,17 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
 // request, layout, and cache paths as well as the item-level filter in Ads.x.
 %hook T1TimelineFeatures
 
+// These two v12.19.1 getters are direct typed accessors over
+// TPSFeatureSwitchesAccess. They can bypass the older feature-switch facade
+// hooks, so mirror the setting at the final accessor as well.
+- (BOOL)isGrokBackendControlledAnalyzeButtonEnabled {
+    return [BHTSettings boolForKey:@"hide_grok_analyze"] ? NO : %orig;
+}
+
+- (BOOL)isReplySortByLikesDelayedEnabled {
+    return [BHTSettings boolForKey:@"reply_sorting"] ? %orig : NO;
+}
+
 - (BOOL)isSSPNativeAdS2SMigrationEnabled {
     return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
 }
@@ -773,6 +791,12 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
 
 - (BOOL)isAgeAssuranceAgeVerificationFlowEnabled {
     return [BHTSettings boolForKey:@"bypass_age_verification"] ? NO : %orig;
+}
+
+// v12.19.1 also exposes the conversation-context switch through the account
+// facade, bypassing the keyed feature-switch hook above.
+- (BOOL)isTweetDetailsConversationContextRemovalEnabled {
+    return [BHTSettings boolForKey:@"restore_reply_context"] ? NO : YES;
 }
 
 - (BOOL)isVideoDynamicAdEnabled {
