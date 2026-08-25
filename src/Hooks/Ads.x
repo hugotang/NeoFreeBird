@@ -283,15 +283,15 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
                    mediaInfo:(id)mediaInfo {
     id result = %orig(playerView, player, account, mediaInfo);
     if (HidePromotedContent() && result) {
-        [result setAdViewModel:nil];
-        [result setShouldRenderAdByAdvertiser:NO];
+        [result setValue:nil forKey:@"adViewModel"];
+        [result setValue:@NO forKey:@"shouldRenderAdByAdvertiser"];
 
-        id pip = [result adPIP];
+        UIView* pip = [result valueForKey:@"adPIP"];
         [pip removeFromSuperview];
-        [result setAdPIP:nil];
-        [[result durationPillView] setHidden:YES];
-        [[result skipAdButton] setHidden:YES];
-        [[result skipCountdownLabel] setHidden:YES];
+        [result setValue:nil forKey:@"adPIP"];
+        [(UIView*)[result valueForKey:@"durationPillView"] setHidden:YES];
+        [(UIView*)[result valueForKey:@"skipAdButton"] setHidden:YES];
+        [(UIView*)[result valueForKey:@"skipCountdownLabel"] setHidden:YES];
     }
     return result;
 }
