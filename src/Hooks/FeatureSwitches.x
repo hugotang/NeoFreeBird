@@ -324,10 +324,23 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         [key isEqualToString:@"ssp_ads_tweet_details"] ||
         [key isEqualToString:
                  @"ssp_ads_tweet_details_client_only_integration"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_s2s_migration_enabled"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_dsa_report_enabled"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_report_enabled"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_manual_layout_enabled"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_actions_bar_enabled"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_ai_disclosure_enabled"] ||
+        [key isEqualToString:@"ssp_ads_immersive_default_video_player_enabled"] ||
+        [key isEqualToString:@"ssp_ads_in_app_debug_menu"] ||
         // Declared to the server in every timeline request's feature-switch
         // map; the other ssp_ads_preroll_* keys have no reader in the client.
         [key isEqualToString:@"ssp_ads_preroll_enabled"]) {
         return [BHTSettings boolForKey:@"hide_promoted"] ? @NO : nil;
+    }
+
+    if ([key isEqualToString:@"ssp_ads_spotlight_ad_fetch_timeout_milliseconds"] ||
+        [key isEqualToString:@"ssp_ads_native_ads_lru_cache_count_per_timeline"]) {
+        return [BHTSettings boolForKey:@"hide_promoted"] ? @0 : nil;
     }
 
     // Reactive blending: likes and follows make the timeline request fresh
@@ -445,6 +458,17 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
                  @"subscriptions_upsells_ios_premium_right_nav_button_variant"] &&
         [BHTSettings boolForKey:@"hide_premium_offer"]) {
         return @"";
+    }
+
+    if ([key isEqualToString:@"ssp_ads_preroll_mute_control"] ||
+        [key isEqualToString:@"ssp_ads_immersive_configuration"] ||
+        [key isEqualToString:@"ssp_ads_native_ad_unit_id"] ||
+        [key isEqualToString:@"ssp_ads_google_dsp_spotlight_ad_unit_id"] ||
+        [key isEqualToString:@"ssp_ads_google_dsp_immersive_ad_unit_id"] ||
+        [key isEqualToString:@"ssp_ads_google_dsp_tweet_details_ad_unit_id"] ||
+        [key isEqualToString:@"ssp_ads_google_dsp_profile_ad_unit_id"] ||
+        [key isEqualToString:@"ssp_ads_google_native_ad_dsa_report_content_url"]) {
+        return [BHTSettings boolForKey:@"hide_promoted"] ? @"" : nil;
     }
 
     return nil;
@@ -703,7 +727,10 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
 }
 
 - (BOOL)isReplySortByLikesDelayedEnabled {
-    return [BHTSettings boolForKey:@"reply_sorting"] ? %orig : NO;
+    if ([BHTSettings boolForKey:@"reply_sorting"]) {
+        return %orig;
+    }
+    return NO;
 }
 
 - (BOOL)isSSPNativeAdS2SMigrationEnabled {
@@ -734,7 +761,87 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
     return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
 }
 
+- (BOOL)isHomeSSPEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isHomeSSPClientsideEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isConversationSSPEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isConversationSSPClientsideEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isProfileSSPEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isProfileSSPClientsideEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSpotlightSSPEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSpotlightSSPClientsideEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSpotlightSSPClientsidePreloadEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPReportEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPReportIllegalContentEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)hasSSPDebugMenu {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (NSString*)googleIMAPrerollMuteControl {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
 - (NSString*)googleSSPNativeAdUnitID {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (NSString*)googleSSPNativeSpotlightAdUnitID {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (NSString*)googleSSPNativeImmersiveAdUnitID {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (NSString*)googleSSPNativeImmersiveConfiguration {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (NSString*)googleSSPNativeConversationAdUnitID {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (NSString*)googleSSPNativeProfileAdUnitID {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (double)googleSSPNativeSpotlightAdFetchTimeout {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? 0.0 : %orig;
+}
+
+- (NSString*)googleSSPReportIllegalContentURLString {
     return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
 }
 

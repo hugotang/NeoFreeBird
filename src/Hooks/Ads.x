@@ -45,11 +45,26 @@ static BOOL ScribeItemIsPromoted(id item) {
            scribeItem[@"promoted_id"] != nil;
 }
 
+// Video-feed ad cards carry an `isAdsVideoCard` flag instead of the regular
+// promoted-status marker. They are the cards that can appear at a fixed
+// cadence in the video timeline, so filter them before the cell is built.
+static BOOL ItemIsAdsVideoCard(id item) {
+    if (![item respondsToSelector:@selector(isAdsVideoCard)]) {
+        return NO;
+    }
+
+    return ((BOOL (*)(id, SEL))objc_msgSend)(item, @selector(isAdsVideoCard));
+}
+
 static BOOL ShouldHideItem(id item, NSString* location) {
     item = unwrapDataViewItem(item);
     NSString* className = NSStringFromClass([item classForCoder]);
 
     if ([BHTSettings boolForKey:@"hide_promoted"]) {
+        if (ItemIsAdsVideoCard(item)) {
+            return YES;
+        }
+
         if ([item
                 isKindOfClass:objc_getClass("T1URTTimelineStatusItemViewModel")] &&
             StatusItemIsPromoted(item)) {
@@ -158,6 +173,14 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
 
 %hook TFNTwitterStatus
 
+- (BOOL)isAdsVideoCard {
+    return HidePromotedContent() ? NO : %orig;
+}
+
+- (BOOL)isAdsVideoCardTypeWithHLSSupport {
+    return HidePromotedContent() ? NO : %orig;
+}
+
 - (_Bool)isCardHidden {
     return (HidePromotedContent() && [self isPromoted])
                ? true
@@ -177,6 +200,46 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
 
 - (id)prerollContent {
     return HidePromotedContent() ? nil : %orig;
+}
+
+%end
+
+%hook T1DynamicVideoAdViewModel
+
+- (id)initWithAdContext:(id)adContext {
+    return HidePromotedContent() ? nil : %orig(adContext);
+}
+
+%end
+
+%hook T1PrerollCTAModel
+
+- (id)initWithPlaylistItem:(id)playlistItem {
+    return HidePromotedContent() ? nil : %orig(playlistItem);
+}
+
+%end
+
+%hook _TtC14T1TwitterSwift20JetfuelImmersiveItem
+
+- (BOOL)isAdsVideoCard {
+    return HidePromotedContent() ? NO : %orig;
+}
+
+- (void)setIsAdsVideoCard:(BOOL)isAdsVideoCard {
+    %orig(HidePromotedContent() ? NO : isAdsVideoCard);
+}
+
+%end
+
+%hook _TtC14T1TwitterSwift34JetfuelTAVVideoPlayerSessionSource
+
+- (BOOL)isAdsVideoCard {
+    return HidePromotedContent() ? NO : %orig;
+}
+
+- (void)setIsAdsVideoCard:(BOOL)isAdsVideoCard {
+    %orig(HidePromotedContent() ? NO : isAdsVideoCard);
 }
 
 %end
