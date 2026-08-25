@@ -181,6 +181,21 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
 
 %end
 
+// Dynamic ads are prefetched before the inline player is built. The account
+// gate above normally stops this path, but keep the prefetcher closed too so
+// already-created observers cannot hydrate a later ad playlist item.
+%hook T1StatusDynamicAdsPrefetcher
+
+- (void)fetchMediasForStatuses:(id)statuses {
+    if (HidePromotedContent()) {
+        return;
+    }
+
+    %orig(statuses);
+}
+
+%end
+
 // These view models forward their ad decision to a status/core model. Keep the
 // forwarding layers closed too, covering translated and composed status paths.
 %hook T1CompositionStatusViewModel
@@ -254,6 +269,55 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
                  HidePromotedContent() ? NO : allowDynamicAd,
                  adDisplayLocation, forceHighestQualityAudio,
                  outputViewFactory);
+}
+
+%end
+
+// Amplify owns a separate ad control bar for some video playlist items. It can
+// be instantiated from hydrated metadata without going through T1InlineMediaView.
+%hook T1AmplifyAdControlBar
+
+- (id)initWithTAVPlayerView:(id)playerView
+                  tavPlayer:(id)player
+                     account:(id)account
+                   mediaInfo:(id)mediaInfo {
+    id result = %orig(playerView, player, account, mediaInfo);
+    if (HidePromotedContent() && result) {
+        [result setAdViewModel:nil];
+        [result setShouldRenderAdByAdvertiser:NO];
+
+        id pip = [result adPIP];
+        [pip removeFromSuperview];
+        [result setAdPIP:nil];
+        [[result durationPillView] setHidden:YES];
+        [[result skipAdButton] setHidden:YES];
+        [[result skipCountdownLabel] setHidden:YES];
+    }
+    return result;
+}
+
+- (id)adViewModel {
+    return HidePromotedContent() ? nil : %orig;
+}
+
+- (void)setAdViewModel:(id)adViewModel {
+    %orig(HidePromotedContent() ? nil : adViewModel);
+}
+
+- (BOOL)shouldRenderAdByAdvertiser {
+    return HidePromotedContent() ? NO : %orig;
+}
+
+- (void)setShouldRenderAdByAdvertiser:(BOOL)shouldRender {
+    %orig(HidePromotedContent() ? NO : shouldRender);
+}
+
+- (void)updateWithCurrentPlaybackState:(id)state {
+    if (HidePromotedContent()) {
+        return;
+    }
+
+    %orig(state);
 }
 
 %end

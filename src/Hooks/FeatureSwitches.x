@@ -684,11 +684,49 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
 
 %end
 
+// Google SSP native ads have their own typed feature facade. Disable the
+// request, layout, and cache paths as well as the item-level filter in Ads.x.
+%hook T1TimelineFeatures
+
+- (BOOL)isSSPNativeAdS2SMigrationEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPNativeAdReloadDataEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPNativeAdRepositoryScribeEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPNativeAdCorrelatorEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPNativeAdManualLayoutEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPNativeAdActionsBarEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isSSPNativeAdAIDisclosureEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (NSString*)googleSSPNativeAdUnitID {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? nil : %orig;
+}
+
+- (NSUInteger)googleSSPNativeAdLRUCacheLimit {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? 0 : %orig;
+}
+
 // The immersive timeline has a typed gate that reads `ssp_ads_immersive`
 // directly from T1TimelineFeatures, bypassing the keyed switch classes above.
 // Keep the request and the client-side item builder on the same ad-free path.
-%hook T1TimelineFeatures
-
 - (BOOL)isImmersiveSSPEnabled {
     return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
 }
