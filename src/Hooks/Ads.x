@@ -313,6 +313,26 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
 // status view models.
 %hook TVPSessionConfiguration
 
+// The account-based initializer below calculates the final dynamic-ad flag
+// again from network autoplay state. Hook the designated initializer as well,
+// otherwise that OR operation can re-enable preroll after the public wrapper
+// received NO.
+- (id)initWithInitialPreferredPeakBitrate:(double)initialPreferredPeakBitrate
+             locationSharingRulesEnforced:(BOOL)locationSharingRulesEnforced
+           bitrateForMp4VariantSelection:(double)bitrateForMp4VariantSelection
+                            allowDynamicAd:(BOOL)allowDynamicAd
+                        adDisplayLocation:(id)adDisplayLocation
+                 forceHighestQualityAudio:(BOOL)forceHighestQualityAudio
+                      outputViewFactory:(id)outputViewFactory {
+    return %orig(initialPreferredPeakBitrate,
+                 locationSharingRulesEnforced,
+                 bitrateForMp4VariantSelection,
+                 HidePromotedContent() ? NO : allowDynamicAd,
+                 adDisplayLocation,
+                 forceHighestQualityAudio,
+                 outputViewFactory);
+}
+
 - (id)initWithAccountID:(id)accountID
             autoplaying:(BOOL)autoplaying
          allowDynamicAd:(BOOL)allowDynamicAd
@@ -325,7 +345,7 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
 - (id)initWithAccountID:(id)accountID
             autoplaying:(BOOL)autoplaying
          allowDynamicAd:(BOOL)allowDynamicAd
-     adDisplayLocation:(NSInteger)adDisplayLocation
+     adDisplayLocation:(id)adDisplayLocation
   forceHighestQualityAudio:(BOOL)forceHighestQualityAudio
        outputViewFactory:(id)outputViewFactory {
     return %orig(accountID, autoplaying,
