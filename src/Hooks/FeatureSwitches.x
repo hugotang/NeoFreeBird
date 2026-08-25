@@ -693,6 +693,14 @@ static NSString* FeatureSwitchStringOverrideForKey(NSString* key) {
     return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
 }
 
+- (BOOL)isImmersiveSSPClientsideEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
+- (BOOL)isImmersiveSSPDefaultVideoPlayerEnabled {
+    return [BHTSettings boolForKey:@"hide_promoted"] ? NO : %orig;
+}
+
 %end
 
 // MARK: - Account feature gates
