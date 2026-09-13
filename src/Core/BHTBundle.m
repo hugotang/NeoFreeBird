@@ -62,16 +62,32 @@
 // every language. These flow through the terminology rename hook like any app
 // string.
 - (NSString*)localizedTwitterStringForKey:(NSString*)key {
-    static NSBundle* twitterBundle = nil;
+    static NSArray<NSBundle*>* twitterBundles = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSString* path =
-            [[NSBundle mainBundle] pathForResource:@"Localization_Localization"
-                                            ofType:@"bundle"];
-        twitterBundle =
-            path ? [NSBundle bundleWithPath:path] : [NSBundle mainBundle];
+        NSBundle* app = [NSBundle mainBundle];
+        NSMutableArray<NSBundle*>* bundles = [NSMutableArray new];
+        // Recent X versions split the app's strings across these two bundles.
+        // Look up each key separately: a bundle can exist without that key.
+        for (NSString* name in @[@"Localization_Localization", @"T1Strings_T1Strings",
+                                 @"TwitterSharedStrings_TwitterSharedStrings"]) {
+            NSURL* url = [app URLForResource:name withExtension:@"bundle"];
+            NSBundle* bundle = url ? [NSBundle bundleWithURL:url] : nil;
+            if (bundle) {
+                [bundles addObject:bundle];
+            }
+        }
+        [bundles addObject:app];
+        twitterBundles = [bundles copy];
     });
-    return [twitterBundle localizedStringForKey:key value:key table:nil];
+
+    for (NSBundle* bundle in twitterBundles) {
+        NSString* value = [bundle localizedStringForKey:key value:key table:nil];
+        if (value.length && ![value isEqualToString:key]) {
+            return value;
+        }
+    }
+    return key;
 }
 - (NSURL*)pathForFile:(NSString*)fileName {
     return [self.mainBundle URLForResource:fileName withExtension:nil];

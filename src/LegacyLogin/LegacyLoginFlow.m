@@ -17,9 +17,6 @@
 #import "Headers/Login.h"
 #import "RuntimeSubclass.h"
 
-// The API's own codes for too many attempts.
-static const NSInteger LegacyLoginRateLimitCodes[] = {243, 245, 246};
-
 static NSString* AppString(NSString* key) {
     return [[BHTBundle sharedBundle] localizedTwitterStringForKey:key];
 }
@@ -74,22 +71,48 @@ static NSString* LegacyLoginCountryCodeForIdentifier(NSString* identifier) {
 static NSString* LegacyLoginMessageForError(NSError* error) {
     NSInteger (*APIErrorCode)(NSError*) =
         dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetAPIErrorCode");
+    NSInteger (*HTTPStatusCode)(NSError*) =
+        dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetStatusCode");
+    NSString* (*APIErrorMessage)(NSError*) =
+        dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetMessage");
     NSInteger code = APIErrorCode ? APIErrorCode(error) : 0;
+    NSInteger status = HTTPStatusCode ? HTTPStatusCode(error) : 0;
 
-    if (code == 0) {
-        return [error tfs_isNotConnectedToInternetError]
-                   ? AppString(@"CONNECTION_ERROR_GENERAL_MESSAGE")
-                   : AppString(@"LOGIN_GENERIC_ERROR_MESSAGE");
+    // Keep diagnostics when an app version does not export the helpers.
+    id rawCode = error.userInfo[@"TFSTwitterAPICommandError.apiErrorCode"];
+    if (code == 0 && [rawCode respondsToSelector:@selector(integerValue)]) {
+        code = [rawCode integerValue];
+    }
+    if (status == 0 && [error.domain isEqualToString:@"com.twitter.TFSTwitterAPICommand.error"]) {
+        status = error.code;
     }
 
-    for (NSUInteger index = 0; index < sizeof(LegacyLoginRateLimitCodes) / sizeof(NSInteger);
-         index++) {
-        if (code == LegacyLoginRateLimitCodes[index]) {
-            return AppString(@"RATE_LIMIT_EXEEDED_ERROR");
-        }
+    id responseMessage = APIErrorMessage ? APIErrorMessage(error) : nil;
+    if (![responseMessage isKindOfClass:NSString.class] || [responseMessage length] == 0) {
+        responseMessage = error.userInfo[@"TFSTwitterAPICommandError.message"];
+    }
+    NSString* message = [responseMessage isKindOfClass:NSString.class] ? responseMessage : nil;
+    if (message.length == 0) {
+        message = [error tfs_isNotConnectedToInternetError]
+                      ? AppString(@"CONNECTION_ERROR_GENERAL_MESSAGE")
+                      : AppString(@"LOGIN_GENERIC_ERROR_MESSAGE");
     }
 
-    return AppString(@"SECURITY_SETTINGS_INCORRECT_PASSWORD_MESSAGE");
+    // A nonzero API code does not mean the password was wrong. Preserve the
+    // server's explanation and codes, without dumping request data or tokens.
+    NSMutableArray<NSString*>* details = [NSMutableArray new];
+    if (status > 0) {
+        [details addObject:[NSString stringWithFormat:@"HTTP %ld", (long)status]];
+    }
+    if (code != 0) {
+        [details addObject:[NSString stringWithFormat:@"API %ld", (long)code]];
+    }
+    if (details.count == 0 && error) {
+        [details addObject:[NSString stringWithFormat:@"%@ (%ld)", error.domain, (long)error.code]];
+    }
+    return details.count ? [NSString stringWithFormat:@"%@\n\n%@", message,
+                                                     [details componentsJoinedByString:@" · "]]
+                         : message;
 }
 
 @interface LegacyLoginFlow ()
