@@ -10,6 +10,28 @@
 
 #import "LegacyLogin/LegacyLoginScreen.h"
 
+// Keep asynchronous onboarding callbacks on the app's own flow after the user
+// chooses it. The legacy form is available again on the next app launch.
+static BOOL useBuiltInLogin = NO;
+
+BOOL NFBPresentBuiltInLogin(NSString* identifier) {
+    Class hostClass = objc_getClass("T1HostViewController");
+    if (![hostClass respondsToSelector:@selector(sharedHostViewController)]) {
+        return NO;
+    }
+    id host = [hostClass sharedHostViewController];
+    SEL signIn = @selector(_signInToAccountWithUsername:completion:);
+    if (![host respondsToSelector:signIn]) {
+        return NO;
+    }
+
+    useBuiltInLogin = YES;
+    // The host owns presentation, account registration and verification. Only
+    // prefill the identifier; the app collects the password in its own flow.
+    ((void (*)(id, SEL, id, id))objc_msgSend)(host, signIn, identifier, ^{});
+    return YES;
+}
+
 static BOOL presentSignIn(UIViewController* presenter, NSString* username) {
     UIViewController* screen = [LegacyLoginScreen signInViewControllerWithIdentifier:username];
     Class sheets = objc_getClass("TFNModalSheetViewController");
@@ -28,7 +50,7 @@ static BOOL presentSignIn(UIViewController* presenter, NSString* username) {
 %hook T1HostViewController
 
 - (void)_signInToAccountWithUsername:(NSString*)username completion:(void (^)(void))completion {
-    if (!presentSignIn(self, username)) {
+    if (useBuiltInLogin || !presentSignIn(self, username)) {
         %orig;
         return;
     }
@@ -39,6 +61,10 @@ static BOOL presentSignIn(UIViewController* presenter, NSString* username) {
 }
 
 - (void)makeOnboardingViewControllerWithCompletion:(void (^)(UIViewController*))completion {
+    if (useBuiltInLogin) {
+        %orig;
+        return;
+    }
     UIViewController* screen = [LegacyLoginScreen signInViewControllerWithIdentifier:nil];
     if (!screen || !completion) {
         %orig;
@@ -53,7 +79,7 @@ static BOOL presentSignIn(UIViewController* presenter, NSString* username) {
 %hook T1AccountsViewController
 
 - (void)private_startLoginFlowWithSender:(id)sender {
-    if (!presentSignIn(self, nil)) {
+    if (useBuiltInLogin || !presentSignIn(self, nil)) {
         %orig;
     }
 }

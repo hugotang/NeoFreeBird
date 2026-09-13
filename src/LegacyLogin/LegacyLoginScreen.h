@@ -7,6 +7,9 @@
 
 #import <UIKit/UIKit.h>
 
+// Uses the host app's sign-in entry point, bypassing our legacy form hooks.
+BOOL NFBPresentBuiltInLogin(NSString* identifier);
+
 @interface LegacyLoginScreen : NSObject
 
 // Wrapped in a TFNNavigationController; nil when the app lacks a piece.

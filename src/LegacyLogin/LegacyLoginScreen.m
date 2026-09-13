@@ -154,6 +154,18 @@ static NSString* TweakString(NSString* key) {
                                        completion:nil];
 }
 
+- (void)useBuiltInLogin {
+    if (NFBPresentBuiltInLogin(self.fields.identifier)) {
+        [self.fields.passwordField updateUserInput:@""];
+        return;
+    }
+
+    UIAlertController* alert =
+        [UIAlertController tfn_okAlertControllerWithTitle:AppString(@"ERROR_ALERT_TITLE")
+                                                  message:AppString(@"LOGIN_GENERIC_ERROR_MESSAGE")];
+    [alert tfn_presentFromViewController:self.controller animated:YES];
+}
+
 #pragma mark - LegacyLoginFlowDelegate
 
 - (UIViewController*)viewControllerToPresentFromForLoginFlow:(LegacyLoginFlow*)flow {
@@ -179,6 +191,16 @@ static NSString* TweakString(NSString* key) {
     UIAlertController* alert =
         [UIAlertController tfn_okAlertControllerWithTitle:AppString(@"ERROR_ALERT_TITLE")
                                                   message:message];
+    if (flow.canUseBuiltInLogin) {
+        __weak typeof(self) weakSelf = self;
+        [alert addAction:[UIAlertAction actionWithTitle:TweakString(@"LOGIN_USE_BUILT_IN")
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction* action) {
+                                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                                       [weakSelf useBuiltInLogin];
+                                                   });
+                                               }]];
+    }
     [alert tfn_presentFromViewController:self.controller animated:YES];
 }
 

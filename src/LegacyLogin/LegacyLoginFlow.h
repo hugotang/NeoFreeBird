@@ -21,6 +21,8 @@
 @interface LegacyLoginFlow : NSObject
 
 @property (nonatomic, weak) id<LegacyLoginFlowDelegate> delegate;
+// Offered only when the legacy request returns HTTP 404 / API 34.
+@property (nonatomic, readonly) BOOL canUseBuiltInLogin;
 
 // nil when the app is missing a class the sign-in request needs.
 + (instancetype)flow;

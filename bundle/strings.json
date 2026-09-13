@@ -2881,6 +2881,24 @@
       "zh-Hant": "已登入",
       "zh_CN": "已登录"
     },
+    "LOGIN_USE_BUILT_IN": {
+      "en": "Use built-in login",
+      "ar": "استخدام تسجيل الدخول المدمج",
+      "de": "Integrierte Anmeldung verwenden",
+      "es": "Usar el inicio de sesión integrado",
+      "fr": "Utiliser la connexion intégrée",
+      "hr": "Koristi ugrađenu prijavu",
+      "id": "Gunakan login bawaan",
+      "ja": "アプリ標準のログインを使用",
+      "ko": "앱 기본 로그인 사용",
+      "pl": "Użyj wbudowanego logowania",
+      "ru": "Использовать встроенный вход",
+      "sv": "Använd inbyggd inloggning",
+      "tr": "Yerleşik girişi kullan",
+      "uk": "Використати вбудований вхід",
+      "zh-Hant": "使用內建登入",
+      "zh_CN": "使用内置登录"
+    },
     "LOGIN_ACCOUNT_EXISTS": {
       "en": "You're already signed in to this account.",
       "ar": "لقد سجّلت الدخول إلى هذا الحساب من قبل.",

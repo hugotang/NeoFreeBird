@@ -68,24 +68,33 @@ static NSString* LegacyLoginCountryCodeForIdentifier(NSString* identifier) {
     return agent.currentCarrierInfo.isoCountryCode.uppercaseString;
 }
 
-static NSString* LegacyLoginMessageForError(NSError* error) {
+static NSInteger LegacyLoginAPIErrorCode(NSError* error) {
     NSInteger (*APIErrorCode)(NSError*) =
         dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetAPIErrorCode");
-    NSInteger (*HTTPStatusCode)(NSError*) =
-        dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetStatusCode");
-    NSString* (*APIErrorMessage)(NSError*) =
-        dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetMessage");
     NSInteger code = APIErrorCode ? APIErrorCode(error) : 0;
-    NSInteger status = HTTPStatusCode ? HTTPStatusCode(error) : 0;
-
     // Keep diagnostics when an app version does not export the helpers.
     id rawCode = error.userInfo[@"TFSTwitterAPICommandError.apiErrorCode"];
     if (code == 0 && [rawCode respondsToSelector:@selector(integerValue)]) {
         code = [rawCode integerValue];
     }
+    return code;
+}
+
+static NSInteger LegacyLoginHTTPStatusCode(NSError* error) {
+    NSInteger (*HTTPStatusCode)(NSError*) =
+        dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetStatusCode");
+    NSInteger status = HTTPStatusCode ? HTTPStatusCode(error) : 0;
     if (status == 0 && [error.domain isEqualToString:@"com.twitter.TFSTwitterAPICommand.error"]) {
         status = error.code;
     }
+    return status;
+}
+
+static NSString* LegacyLoginMessageForError(NSError* error) {
+    NSInteger code = LegacyLoginAPIErrorCode(error);
+    NSInteger status = LegacyLoginHTTPStatusCode(error);
+    NSString* (*APIErrorMessage)(NSError*) =
+        dlsym(RTLD_DEFAULT, "TFSTwitterAPICommandErrorGetMessage");
 
     id responseMessage = APIErrorMessage ? APIErrorMessage(error) : nil;
     if (![responseMessage isKindOfClass:NSString.class] || [responseMessage length] == 0) {
@@ -119,6 +128,7 @@ static NSString* LegacyLoginMessageForError(NSError* error) {
 // The flow is passed as the command's authTokenStorage, so it answers these.
 @property (nonatomic, copy) NSString* authTimelineToken;
 @property (nonatomic, copy) NSString* identifier;
+@property (nonatomic, readwrite) BOOL canUseBuiltInLogin;
 // Presenting a challenge does not retain it.
 @property (nonatomic) id<T1LoginChallenge> challenge;
 @end
@@ -139,6 +149,7 @@ static NSString* LegacyLoginMessageForError(NSError* error) {
 - (void)signInWithIdentifier:(NSString*)identifier
                     password:(NSString*)password
                    uiMetrics:(NSString*)uiMetrics {
+    self.canUseBuiltInLogin = NO;
     if ([LegacyLoginAccountForUsername(identifier) isOwner]) {
         [self.delegate loginFlow:self didFailWithMessage:TweakString(@"LOGIN_ACCOUNT_EXISTS")];
         return;
@@ -176,6 +187,8 @@ static NSString* LegacyLoginMessageForError(NSError* error) {
              response:(TFSTwitterXAuthPasswordResponse*)response
                 error:(NSError*)error {
     if (!success) {
+        self.canUseBuiltInLogin = LegacyLoginHTTPStatusCode(error) == 404 &&
+                                 LegacyLoginAPIErrorCode(error) == 34;
         [self.delegate loginFlow:self didFailWithMessage:LegacyLoginMessageForError(error)];
     } else if (response.token.length && response.tokenSecret.length) {
         [self finishWithResponse:response];
